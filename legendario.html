@@ -1,0 +1,1613 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>JavaQuest Legendario</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: HUD bar fijo arriba, franja de misión (3 zonas) como mapa de progreso, vistas tipo app con tarjetas y editor de código oscuro */
+:root{
+  --bg:#edf1f7; --surface:#ffffff; --surface-2:#f5f7fb; --ink:#13203a; --muted:#56637d; --line:#d5dde9;
+  --java:#cf6400; --java-soft:#fde8d3; --blue:#2c6aa0; --blue-soft:#dce8f4;
+  --ok:#15784b; --ok-soft:#d9f1e4; --bad:#bf3328; --bad-soft:#fae0dc;
+  --code-bg:#0e1a2c; --code-ink:#dde6f3; --code-kw:#ff9d4d; --code-str:#9be28f; --code-num:#80c6ff; --code-com:#7385a1; --code-fn:#e8c47c; --code-ln:#4c5e7a; --code-hover:#182a45;
+  --f-display:"Unbounded","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1322; --surface:#111e35; --surface-2:#0e192d; --ink:#e7edf7; --muted:#97a4bc;
+  --line:#243452; --java:#ff8f2b; --java-soft:#3a2410; --blue:#6ea8de; --blue-soft:#15304e;
+  --ok:#45d394; --ok-soft:#10372a; --bad:#ff6e62; --bad-soft:#3f1b19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1322; --surface:#111e35; --surface-2:#0e192d; --ink:#e7edf7; --muted:#97a4bc;
+  --line:#243452; --java:#ff8f2b; --java-soft:#3a2410; --blue:#6ea8de; --blue-soft:#15304e;
+  --ok:#45d394; --ok-soft:#10372a; --bad:#ff6e62; --bad-soft:#3f1b19; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.6rem,4.2vw,2.6rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.3rem,3vw,1.8rem)}
+h3{font-size:1.1rem}
+p{margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.9em}
+:not(pre)>code{background:var(--blue-soft);color:var(--ink);padding:.05em .35em;border-radius:5px}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--java);font-weight:600}
+.lead{color:var(--muted);max-width:65ch}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- Barra superior ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.15rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand .cup{width:30px;height:30px;border-radius:8px;background:var(--java);color:#fff;display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem}
+.brand span{color:var(--java)}
+.brand .legend-chip{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--ink);padding:3px 7px;border-radius:6px;font-weight:600}
+
+.level-link{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface);border:1.5px solid var(--java);border-radius:var(--r);padding:12px 14px;text-decoration:none;color:var(--ink);max-width:560px}
+.level-link:hover{background:var(--java-soft)}
+.level-link .ll-txt{display:grid;gap:2px;min-width:0}
+.level-link .ll-txt small{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.level-link .ll-txt b{font-family:var(--f-display);font-size:1rem}
+.level-link .ll-go{font-weight:700;color:var(--java);white-space:nowrap}
+a.btn{text-decoration:none;display:inline-block;color:inherit}
+a.btn.primary{color:#fff}
+.route .step sup{font-size:.65rem;margin-left:2px}
+.opt.miss{border-style:dashed;border-color:var(--ok)}
+.multi-hint{font-family:var(--f-mono);font-size:.78rem;color:var(--java);font-weight:600}
+.tabs{display:flex;gap:4px;overflow-x:auto;order:3;width:100%;scrollbar-width:none}
+.tab{border:1px solid transparent;background:none;padding:6px 12px;border-radius:999px;font-weight:700;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+.tab:hover:not([aria-selected="true"]){border-color:var(--line);color:var(--ink)}
+.hud{margin-left:auto;display:flex;align-items:center;gap:12px;min-width:0}
+.lvl{display:flex;align-items:center;gap:8px;min-width:0}
+.lvl-badge{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:.85rem;background:conic-gradient(var(--java) calc(var(--p,0)*1%),var(--line) 0);position:relative;flex:none}
+.lvl-badge::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--surface)}
+.lvl-badge b{position:relative}
+.lvl-txt{font-size:.8rem;line-height:1.2;min-width:0}
+.lvl-txt strong{display:block;font-size:.9rem}
+.lvl-txt span{color:var(--muted);font-variant-numeric:tabular-nums}
+.streak{font-family:var(--f-mono);font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.streak.hot{background:var(--java);color:#fff;border-color:var(--java)}
+@media (min-width:860px){.tabs{order:0;width:auto;margin-left:12px}}
+
+/* ---------- Hero / mapa de misión ---------- */
+.hero{display:grid;gap:24px;padding-block:28px 8px}
+.hero-text{display:grid;gap:12px}
+.hero h1 em{font-style:normal;color:var(--java)}
+.mission{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;position:relative}
+.mission::before{content:"";position:absolute;left:8%;right:8%;top:27px;border-top:2px dashed var(--line);z-index:0}
+.station{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:6px;background:none;border:0;padding:0;width:100%}
+.station .node{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:var(--surface);border:2px solid var(--line);font-family:var(--f-mono);font-weight:600;transition:transform .2s}
+.station:hover .node{transform:translateY(-2px)}
+.station.active .node{border-color:var(--java);box-shadow:0 0 0 4px var(--java-soft)}
+.station.complete .node{background:var(--ok);border-color:var(--ok);color:#fff}
+.station.locked .node{opacity:.6}
+.station strong{font-size:.92rem;line-height:1.2}
+.station small{color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
+.badges-strip{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.badges-strip .lbl{font-size:.8rem;color:var(--muted);margin-right:4px}
+.medal{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.62rem;font-weight:600;background:var(--surface-2);border:1px dashed var(--line);color:var(--muted);position:relative}
+.medal.on{background:var(--java);color:#fff;border:2px solid var(--java);box-shadow:0 2px 0 var(--java-soft)}
+.badges-strip .medal:nth-last-child(-n+3) .tip{left:auto;right:0;transform:none}
+.medal:hover .tip,.medal:focus .tip{display:block;opacity:1;transform:translate(-50%,0)}
+.medal .tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translate(-50%,4px);opacity:0;pointer-events:none;background:var(--ink);color:var(--surface);font-family:var(--f-body);font-size:.75rem;font-weight:400;padding:6px 8px;border-radius:8px;width:150px;text-align:center;transition:.15s;z-index:5}
+@media (min-width:860px){.hero{grid-template-columns:1.1fr 1fr;align-items:center}}
+
+/* ---------- Vistas ---------- */
+.view{padding-block:28px 56px;display:grid;gap:20px;scroll-margin-top:120px}
+.view-head{display:grid;gap:8px}
+.grid{display:grid;gap:14px}
+.topics{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;text-align:left;display:grid;gap:8px;align-content:start;transition:border-color .15s,transform .15s}
+button.card:hover{border-color:var(--java);transform:translateY(-2px)}
+.card .num{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px}
+.stars{font-size:1rem;letter-spacing:2px;color:var(--line)}
+.stars .on{color:var(--java)}
+.chip{font-family:var(--f-mono);font-size:.72rem;padding:3px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue);font-weight:600;white-space:nowrap}
+.chip.java{background:var(--java-soft);color:var(--java)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.card p{color:var(--muted);font-size:.92rem}
+
+.back{background:none;border:0;color:var(--blue);font-weight:700;padding:4px 0;justify-self:start}
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 18px;border-radius:10px;font-weight:700}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--java);border-color:var(--java);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ---------- Código ---------- */
+.code{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:14px 14px;margin:0;overflow-x:auto;font-family:var(--f-mono);font-size:.86rem;line-height:1.65;min-width:0}
+.cl{display:block;white-space:pre;min-height:1.65em}
+.ln{display:inline-block;width:2.2ch;margin-right:1.4ch;text-align:right;color:var(--code-ln);user-select:none}
+.t-kw{color:var(--code-kw)}.t-str{color:var(--code-str)}.t-num{color:var(--code-num)}.t-com{color:var(--code-com);font-style:italic}.t-fn{color:var(--code-fn)}
+
+/* ---------- Tema / ruta ---------- */
+.topic-layout{display:grid;gap:18px}
+.topic-layout>*{min-width:0}
+.ficha{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:12px;align-content:start}
+.tips{margin:0;padding-left:1.1em;display:grid;gap:6px;font-size:.93rem}
+.runner{display:grid;gap:14px;align-content:start;min-width:0}
+.route{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:.78rem}
+.route .step{padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.route .step.cur{border-color:var(--java);color:var(--java);font-weight:600}
+.route .step.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.route .step.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.route .step.skip{opacity:.45;text-decoration:line-through}
+.route .arrow{color:var(--muted)}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:14px;min-width:0}
+.q-label{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600}
+.q-prompt{font-size:1.05rem;font-weight:700}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.opt{text-align:left;background:var(--surface-2);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;overflow-wrap:anywhere}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.ans-form{display:flex;gap:8px;flex-wrap:wrap}
+.ans{flex:1 1 180px;min-width:0;font-family:var(--f-mono);font-size:1rem;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.ans:focus{border-color:var(--blue);outline:none}
+.feedback{border-radius:12px;padding:14px 16px;display:grid;gap:10px;border:1.5px solid}
+.feedback.ok{background:var(--ok-soft);border-color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);border-color:var(--bad)}
+.feedback.info{background:var(--blue-soft);border-color:var(--blue)}
+.feedback strong{font-family:var(--f-display);font-size:.95rem}
+.done-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:14px;justify-items:start}
+.big-stars{font-size:2.2rem;letter-spacing:6px;color:var(--line)}
+.big-stars .on{color:var(--java)}
+
+/* ---------- Juegos ---------- */
+.games{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.game-card .gk{font-family:var(--f-mono);font-size:.75rem;color:var(--java);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.game-card .glyph{font-family:var(--f-mono);font-weight:600;font-size:1.3rem;color:var(--blue)}
+.ghead{display:grid;gap:10px}
+.gbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.gbar i{display:block;height:100%;background:var(--java);border-radius:99px;transition:width .3s}
+.ghead .row{justify-content:space-between}
+.bug-code{background:var(--code-bg);border-radius:12px;padding:8px 0;overflow-x:auto;display:grid}
+.bline{display:flex;align-items:center;text-align:left;background:none;border:0;border-left:3px solid transparent;color:var(--code-ink);font-family:var(--f-mono);font-size:.86rem;line-height:1.65;padding:3px 14px 3px 11px;white-space:pre;width:100%;min-width:max-content}
+.bline:hover:not(:disabled){background:var(--code-hover);border-left-color:var(--code-fn)}
+.bline.hit{background:#14402e;border-left-color:#45d394}
+.bline.miss{background:#4a1d1b;border-left-color:#ff6e62;opacity:.8}
+.bline:disabled{cursor:default}
+.parsons{display:grid;gap:14px}
+.parsons>div{min-width:0}
+.pzone{border:1.5px dashed var(--line);border-radius:12px;padding:10px;min-height:120px;display:grid;gap:6px;align-content:start;background:var(--surface)}
+.pzone.sol{border-color:var(--blue);background:var(--surface-2)}
+.pzone h4{margin:0 0 4px;font-size:.78rem;font-family:var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pline{background:var(--code-bg);color:var(--code-ink);border:1px solid transparent;border-radius:8px;padding:7px 10px;text-align:left;font-family:var(--f-mono);font-size:.84rem;white-space:pre;overflow-x:auto;display:flex;gap:8px;align-items:center}
+.pline:hover{border-color:var(--code-fn)}
+.pline .pn{color:var(--code-ln);flex:none;min-width:2ch}
+.empty-hint{color:var(--muted);font-size:.88rem;padding:8px}
+@media (min-width:860px){.parsons{grid-template-columns:1fr 1fr}.topic-layout{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr)}}
+.trace-inputs{display:flex;gap:12px;flex-wrap:wrap}
+.trace-inputs label{display:grid;gap:4px;font-family:var(--f-mono);font-size:.85rem;font-weight:600}
+.trace-inputs input{width:110px}
+.trace-inputs input.right{border-color:var(--ok);background:var(--ok-soft)}
+.trace-inputs input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.trace-table{border-collapse:collapse;font-family:var(--f-mono);font-size:.82rem;width:100%}
+.trace-table td,.trace-table th{border:1px solid var(--line);padding:5px 8px;text-align:left}
+.tbl-wrap{overflow-x:auto}
+
+.blitz{display:grid;gap:16px;justify-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px 16px}
+.blitz-stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.stat{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;display:grid;min-width:88px}
+.stat b{font-family:var(--f-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.stat.hot{border-color:var(--java);background:var(--java-soft)}
+.ctx{font-family:var(--f-mono);font-size:.95rem;color:var(--muted)}
+.expr{font-family:var(--f-mono);font-size:clamp(1.3rem,5vw,2rem);font-weight:600;background:var(--code-bg);color:var(--code-ink);padding:16px 22px;border-radius:12px;max-width:100%;overflow-x:auto;white-space:pre}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,420px)}
+.tf button{padding:16px;border-radius:12px;border:0;font-family:var(--f-mono);font-weight:600;font-size:1.15rem;color:#fff}
+.tf .t{background:var(--ok)}.tf .f{background:var(--bad)}
+.tf button:active{transform:scale(.97)}
+.timebar{width:100%;height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.timebar i{display:block;height:100%;background:var(--blue);transition:width .25s linear}
+.flash-ok{animation:fok .35s}.flash-bad{animation:fbad .35s}
+@keyframes fok{0%{box-shadow:0 0 0 0 var(--ok)}100%{box-shadow:0 0 0 14px transparent}}
+@keyframes fbad{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.duel{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.duel-opt{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:12px;display:grid;gap:10px;text-align:left;min-width:0}
+.duel-opt:hover:not(:disabled){border-color:var(--blue)}
+.duel-opt .tag{font-family:var(--f-mono);font-size:.78rem;font-weight:600;color:var(--muted)}
+.duel-opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.duel-opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.duel-opt:disabled{cursor:default}
+
+/* ---------- Examen ---------- */
+.boss{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:grid;gap:16px}
+.boss-rules{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+.rule{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:2px}
+.rule b{font-family:var(--f-display);font-size:1.2rem}
+.rule span{font-size:.85rem;color:var(--muted)}
+.lockbox{display:grid;gap:10px}
+.req{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:.92rem}
+.req.met{border-color:var(--ok);background:var(--ok-soft)}
+.field{display:grid;gap:6px;max-width:420px}
+.field label{font-weight:700;font-size:.9rem}
+.exam-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px);z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:10px}
+@media (min-width:860px){.exam-bar{top:calc(env(safe-area-inset-top,0px) + 66px)}}
+.exam-bar .row{justify-content:space-between}
+.clock{font-family:var(--f-mono);font-weight:600;font-size:1.1rem;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:var(--surface-2)}
+.clock.warn{background:var(--bad);color:#fff}
+.qgrid{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:859px){.qgrid{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}.qdot{flex:none}}
+.qdot{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface-2);font-family:var(--f-mono);font-size:.8rem;font-weight:600}
+.qdot.ans{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}
+.qdot.cur{border-color:var(--java);box-shadow:0 0 0 2px var(--java-soft)}
+.result{display:grid;gap:18px}
+.cert{border:2px solid var(--java);border-radius:var(--r);padding:24px;background:var(--surface);display:grid;gap:10px;position:relative;overflow:hidden}
+.cert::after{content:"final";position:absolute;right:-10px;bottom:-30px;font-family:var(--f-display);font-size:7rem;color:var(--java-soft);z-index:0;pointer-events:none}
+.cert>*{position:relative;z-index:1}
+.nota{font-family:var(--f-display);font-size:clamp(3rem,10vw,4.5rem);line-height:1;font-variant-numeric:tabular-nums}
+.nota.pass{color:var(--ok)}.nota.fail{color:var(--bad)}
+.review{display:grid;gap:10px}
+.rev{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;padding:12px 14px;background:var(--surface);display:grid;gap:8px;min-width:0}
+.rev.bad{border-left-color:var(--bad)}
+.rev p{font-size:.92rem}
+
+/* ---------- Guía ---------- */
+.guide{display:grid;gap:14px}
+.gsec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:10px}
+.gsec ul,.gsec ol{margin:0;padding-left:1.2em;display:grid;gap:6px}
+.gsec p,.gsec li{max-width:70ch}
+.plan td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.plan{border-collapse:collapse;width:100%;font-size:.92rem}
+.plan td,.plan th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+.plan th{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+
+/* ---------- Toasts / modal ---------- */
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;display:grid;gap:8px;justify-items:end;pointer-events:none}
+.toast{background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:12px;font-weight:700;font-size:.9rem;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:tin .3s;max-width:300px}
+.toast .x{color:var(--java);font-family:var(--f-mono)}
+.toast.badge{background:var(--java);color:#fff}
+.toast.badge .x{color:#fff}
+@keyframes tin{from{transform:translateY(10px);opacity:0}}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,10,20,.55);display:grid;place-items:center;padding:16px}
+.modal-box{background:var(--surface);border-radius:var(--r);padding:22px;max-width:420px;width:100%;display:grid;gap:12px;border:1px solid var(--line)}
+.modal-box .row{justify-content:flex-end}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:45}
+footer{border-top:1px solid var(--line);padding-block:20px;color:var(--muted);font-size:.85rem}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;color:var(--blue);text-decoration:underline;padding:0;font-size:inherit}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#repaso" data-go="repaso"><span class="cup" aria-hidden="true">{ }</span>Java<span>Quest</span><span class="legend-chip">Maestro Legendario</span></a>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" role="tab" data-view="repaso">1 · Repaso</button>
+      <button class="tab" role="tab" data-view="juegos">2 · Juegos</button>
+      <button class="tab" role="tab" data-view="examen">3 · Examen final</button>
+      <button class="tab" role="tab" data-view="guia">Guía docente</button>
+    </nav>
+    <div class="hud" aria-live="polite">
+      <div class="lvl">
+        <div class="lvl-badge" id="lvl-ring"><b id="lvl-n">1</b></div>
+        <div class="lvl-txt"><strong id="lvl-name">Semilla</strong><span id="lvl-xp">0 XP</span></div>
+      </div>
+      <div class="streak" id="streak" title="Aciertos seguidos">racha 0</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">Programación desde cero · Java · Nivel Maestro Legendario</p>
+      <h1>Modo <em>legendario</em>: más ejercicios, más trampas, cero suerte.</h1>
+      <p class="lead">Más de 80 ejercicios en la práctica, 60 rondas de juego y un banco de 40 preguntas para el examen. Aquí aparecen el pre y post incremento, el cortocircuito, De Morgan, la concatenación, el else colgante y los errores silenciosos que el compilador no avisa.</p>
+      <div class="badges-strip" id="badges"></div>
+      <a class="level-link" href="https://claude.ai/artifact/3bWvewe6N5Mb5MfdWNmeav" target="_blank" rel="noopener"><span class="ll-txt"><small>Nivel anterior</small><b>Junior Baby</b></span><span class="ll-go">← Volver a Junior Baby</span></a>
+    </div>
+    <ol class="mission" id="mission"></ol>
+  </section>
+
+  <section id="view-repaso" class="view" data-v="repaso">
+    <div class="view-head" id="repaso-head">
+      <p class="eyebrow">Zona 1 · Campamento base</p>
+      <h2>Repaso con rutas ramificadas</h2>
+      <p class="lead">Cada tema tiene 6 ejercicios de dificultad creciente. Si fallas uno, la ruta se desvía a un refuerzo que explica el concepto antes de seguir. Tres estrellas solo sin errores; dos con un máximo de dos.</p>
+    </div>
+    <div id="topic-grid" class="grid topics"></div>
+    <div id="topic-stage" hidden></div>
+  </section>
+
+  <section id="view-juegos" class="view" data-v="juegos" hidden>
+    <div class="view-head" id="juegos-head">
+      <p class="eyebrow">Zona 2 · Arena · Nivel medio</p>
+      <h2>Cinco juegos, rondas legendarias</h2>
+      <p class="lead">14 bugs, 7 programas con dos líneas trampa cada uno, 9 pruebas de escritorio, 12 duelos de estilo y un contrarreloj de 45 segundos con expresiones de tres operadores.</p>
+    </div>
+    <div id="game-grid" class="grid games"></div>
+    <div id="game-stage" hidden></div>
+  </section>
+
+  <section id="view-examen" class="view" data-v="examen" hidden>
+    <div class="view-head">
+      <p class="eyebrow">Zona 3 · Jefe final · Nivel difícil</p>
+      <h2>Examen final</h2>
+    </div>
+    <div id="exam-stage"></div>
+  </section>
+
+  <section id="view-guia" class="view" data-v="guia" hidden>
+    <div class="view-head">
+      <p class="eyebrow">Para la docente</p>
+      <h2>Guía de uso en clase</h2>
+      <p class="lead">Estrategias, métodos y dinámicas de gamificación que sustentan esta página, y cómo sacarles provecho en el aula.</p>
+    </div>
+    <div class="guide">
+      <div class="gsec">
+        <h3>Métodos de aprendizaje integrados</h3>
+        <ul>
+          <li><strong>Rutas ramificadas (feedback adaptativo).</strong> El estudiante que acierta avanza al reto; el que falla recibe una explicación y un ejercicio de refuerzo antes de continuar. Nadie se queda atascado y nadie se aburre.</li>
+          <li><strong>PRIMM: Predecir, Ejecutar, Investigar, Modificar, Crear.</strong> Casi todos los ejercicios piden predecir la salida antes de ejecutar. Después, pida que copien el código al IDE, comprueben su predicción y lo modifiquen.</li>
+          <li><strong>Problemas de Parsons.</strong> Ordenar líneas reduce la carga de sintaxis y concentra la atención en la lógica. La línea trampa obliga a distinguir entre código casi correcto y correcto.</li>
+          <li><strong>Preguntas de selección múltiple con varias respuestas.</strong> Obligan a evaluar cada opción por separado: no basta con descartar.</li>
+          <li><strong>Prueba de escritorio.</strong> El Rastreador entrena el trazado mental de variables, la habilidad que más predice el éxito en programación inicial.</li>
+          <li><strong>Práctica intercalada y de recuperación.</strong> Juegos y examen mezclan temas a propósito: obliga a reconocer qué herramienta usar, no solo a repetir la última vista.</li>
+          <li><strong>Aprendizaje por error.</strong> Caza el bug convierte los errores clásicos de principiante (<code>=</code> por <code>==</code>, constantes reasignadas, bucles infinitos) en material de estudio.</li>
+        </ul>
+      </div>
+      <div class="gsec">
+        <h3>Mecánicas de gamificación</h3>
+        <ul>
+          <li><strong>XP y 6 niveles</strong> con nombres de conceptos de Java: Semilla, Variable, Operador, Condicional, Bucle y Leyenda Java.</li>
+          <li><strong>Rachas:</strong> desde 3 aciertos seguidos cada respuesta correcta da +5 XP extra; la insignia exige 8 seguidos.</li>
+          <li><strong>11 insignias</strong> por hitos concretos (ruta perfecta, cazabugs, rayo booleano, jefe derrotado…).</li>
+          <li><strong>Estrellas por tema:</strong> 3 sin errores, 2 con máximo dos, 1 al completar. Invitan a repetir para mejorar.</li>
+          <li><strong>Jefe final bloqueado:</strong> el examen se abre al completar 6 temas y 4 juegos. Puede desbloquearlo manualmente desde la pantalla del examen.</li><li><strong>Examen aleatorio:</strong> 30 preguntas sorteadas de un banco de 40, con opciones mezcladas. Dos estudiantes vecinos no ven el mismo examen.</li>
+          <li><strong>Certificado con nota de 0.0 a 5.0</strong> y revisión detallada de cada pregunta.</li>
+        </ul>
+      </div>
+      <div class="gsec">
+        <h3>Plan sugerido: dos sesiones de 2 horas</h3>
+        <div class="tbl-wrap"><table class="plan">
+          <thead><tr><th>Tiempo</th><th>Actividad</th><th>Dinámica</th></tr></thead>
+          <tbody>
+            <tr><td>Sesión 1 · 0:00–0:10</td><td>Rayo booleano</td><td>Calentamiento individual. Proyecte el mejor puntaje del grupo.</td></tr>
+            <tr><td>Sesión 1 · 0:10–1:30</td><td>Repaso legendario</td><td>Individual. Meta: los 7 temas. Atienda primero a quien acumula rutas de refuerzo.</td></tr>
+            <tr><td>Sesión 1 · 1:30–2:00</td><td>Caza el bug</td><td>Parejas piloto y navegante.</td></tr>
+            <tr><td>Sesión 2 · 0:00–1:00</td><td>Arena de juegos</td><td>Parejas; cambian de rol en cada juego. Meta: 4 juegos completos.</td></tr>
+            <tr><td>Sesión 2 · 1:00–1:45</td><td>Examen final</td><td>Individual, 45 minutos. Captura del certificado como evidencia.</td></tr>
+            <tr><td>Sesión 2 · 1:45–2:00</td><td>Cierre</td><td>Revisen juntos las preguntas con más errores del grupo.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="gsec">
+        <h3>Dinámicas extra para el aula</h3>
+        <ul>
+          <li><strong>Liga por equipos:</strong> equipos de 3–4 suman el XP de sus integrantes. Tablero en el aula actualizado al final de cada sesión.</li>
+          <li><strong>Bug del día:</strong> abra la clase proyectando una ronda de Caza el bug; quien lo encuentre primero explica por qué falla.</li>
+          <li><strong>Del juego al IDE:</strong> tras cada ronda del Rastreador, ejecuten el código real en el IDE y comparen con su predicción.</li>
+          <li><strong>Reto inverso:</strong> los estudiantes crean su propio ejercicio con línea trampa para que otro equipo lo resuelva.</li>
+        </ul>
+        <p class="lead">El progreso se guarda en el navegador de cada estudiante. Si comparten equipo, deben usar <em>Reiniciar progreso</em> al cambiar de usuario.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>JavaQuest · Variables, operadores, condicionales y bucles</span><button class="linkbtn" id="reset">Reiniciar progreso</button></div></footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-t">
+  <div class="modal-box">
+    <h3 id="modal-t"></h3>
+    <p id="modal-p" class="lead"></p>
+    <div class="row"><button class="btn" id="modal-no">Cancelar</button><button class="btn primary" id="modal-ok">Confirmar</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+/* ===== Banco de contenido · Modo legendario ===== */
+const TOPICS=[
+{id:'var',title:'Variables y constantes',tag:'final · identificadores · asignación',
+ ficha:{code:`int edad = 18;              // variable
+final double IVA = 0.19;    // constante
+final int LIMITE;           // final "en blanco"
+LIMITE = 50;                // se asigna UNA sola vez
+
+int a = 5;
+int b = a;                  // b recibe una COPIA del valor
+a = 10;                     // b sigue valiendo 5`,
+ tips:['Un identificador no empieza con dígito ni puede ser palabra reservada (<code>class</code>, <code>for</code>, <code>int</code>…).','Variables en camelCase; constantes en MAYÚSCULAS_CON_GUION_BAJO.','Asignar copia el valor en ese instante. Cambiar una variable después no afecta a la otra.','Un <code>final</code> puede declararse sin valor y asignarse después, pero solo una vez.']},
+ stages:[
+  {q:{type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál declaración NO compila?',options:['int 2doLugar = 5;','int _total = 3;','int $precio = 9;','int numeroDe2 = 1;'],answer:0,why:'Un identificador no puede empezar con dígito. <code>_</code> y <code>$</code> son legales, aunque la convención recomienda no usarlos en nombres de variables.'},
+   ref:{type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál nombre sigue la convención de Java para una variable?',options:['notaFinal','NotaFinal','nota_final','NOTAFINAL'],answer:0,why:'camelCase: primera palabra en minúscula y las siguientes con inicial mayúscula. PascalCase se reserva para clases y MAYÚSCULAS para constantes.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int a = 5;
+int b = a;
+a = 10;
+b = b + a;
+System.out.println(b);`,answer:'15',why:'<code>b</code> recibió una copia del 5. Luego <code>a</code> cambia a 10, y <code>b = 5 + 10 = 15</code>.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int x = 3;
+int y = x;
+y = 8;
+System.out.println(x);`,options:['3','8','11','Error de compilación'],answer:0,why:'Cambiar <code>y</code> no afecta a <code>x</code>: al asignar se copió el valor, no se creó un enlace.'}},
+  {q:{type:'mc',check:'out',prompt:'¿Qué ocurre con este código?',code:`final int LIMITE;
+LIMITE = 50;
+System.out.println(LIMITE);`,options:['50','Error: un final debe inicializarse en la misma línea','0','Error al ejecutar'],answer:0,why:'Es un <em>final en blanco</em>: se declara sin valor y se asigna después. Lo único prohibido es asignarlo una segunda vez.'},
+   ref:{type:'mc',check:'err',prompt:'¿Qué ocurre al compilar?',code:`final int MAX = 10;
+MAX = MAX + 1;`,options:['Error de compilación','MAX pasa a valer 11','MAX sigue en 10 sin error','Error al ejecutar'],answer:0,why:'Una constante ya inicializada no admite otra asignación. El compilador lo detecta antes de ejecutar.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (escribe los dos valores separados por un espacio)',code:`int x = 4;
+int y = x * 2;
+x = y - x;
+y = x + y;
+x = y % x;
+System.out.println(x + " " + y);`,answer:'0 12',why:'x=4, y=8 → x=8−4=4 → y=4+8=12 → x=12 % 4=0. Resultado: <code>0 12</code>.'},
+   ref:{type:'input',prompt:'¿Qué imprime?',code:`int n = 7;
+n = n - 2;
+n = n * n;
+System.out.println(n);`,answer:'25',why:'7 → 5 → 25. Cada asignación usa el valor que la variable tenía justo antes.'}},
+  {q:{type:'multi',codeOpts:true,check:'compile',pre:'',prompt:'Selecciona TODAS las líneas que compilan.',options:['int a = 5, b = a + 1;','final double PI = 3.1416;','int total = 10.5;','double precio = 20;','int class = 3;'],answer:[0,1,3],why:'<code>int total = 10.5</code> falla porque un int no guarda decimales sin conversión explícita. <code>int class</code> falla porque <code>class</code> es palabra reservada. <code>double precio = 20</code> sí compila: un entero cabe en un double.'},
+   ref:{type:'mc',check:'none',prompt:'¿Por qué <code>int class = 3;</code> no compila?',options:['class es una palabra reservada de Java','Los nombres no pueden tener 5 letras','Falta la palabra final','int no admite el valor 3'],answer:0,why:'Las palabras reservadas (<code>class</code>, <code>if</code>, <code>for</code>, <code>int</code>, <code>final</code>…) tienen significado fijo y no pueden usarse como nombres.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (sin espacios)',code:`int a = 1, b = 2, c = 3;
+a = b;
+b = c;
+c = a;
+System.out.println(a + "" + b + c);`,answer:'232',why:'a=2, b=3, c=a=2. Al unir con <code>""</code> se concatena como texto: <code>232</code>. Sin variable auxiliar, el valor original de a se pierde.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int a = 1, b = 2;
+a = b;
+b = a;
+System.out.println(a + " " + b);`,options:['2 2','2 1','1 2','1 1'],answer:0,why:'Tras <code>a = b</code>, a ya vale 2; luego <code>b = a</code> copia ese 2. Para intercambiar se necesita una variable auxiliar.'}}
+ ]},
+{id:'arit',title:'Operadores aritméticos',tag:'+ − * / % ++ --',
+ ficha:{code:`int a = 23, b = 4;
+a / b      // 5   división entera
+a % b      // 3   residuo
+-17 % 5    // -2  el signo sigue al dividendo
+7 / 2.0    // 3.5 basta un decimal para dividir con decimales
+
+int x = 5;
+int y = x++;   // y = 5, luego x = 6  (post-incremento)
+int z = ++x;   // x = 7, luego z = 7  (pre-incremento)`,
+ tips:['Precedencia: <code>++ --</code> unarios, luego <code>* / %</code>, luego <code>+ -</code>, y al final la asignación.','<code>x++</code> entrega el valor viejo; <code>++x</code> entrega el valor nuevo.','Con <code>+</code>, en cuanto aparece un texto, todo lo que sigue se concatena.','En <code>x *= expr</code> el lado derecho se calcula completo primero.']},
+ stages:[
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int a = 23, b = 4;
+System.out.println(a / b + " " + a % b);`,answer:'5 3',why:'23 / 4 = 5 en división entera y sobran 3.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(9 / 2);`,options:['4','4.5','5','1'],answer:0,why:'Entre enteros, <code>/</code> descarta la parte decimal sin redondear.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int r = 10 - 4 / 2 * 3 + 7 % 3;
+System.out.println(r);`,answer:'5',why:'<code>4 / 2 = 2</code>, <code>2 * 3 = 6</code>, <code>7 % 3 = 1</code>. Luego de izquierda a derecha: 10 − 6 + 1 = 5.'},
+   ref:{type:'mc',check:'none',prompt:'En <code>2 + 3 * 4</code>, ¿qué se calcula primero?',options:['3 * 4','2 + 3','Depende del compilador','Siempre de izquierda a derecha'],answer:0,why:'<code>*</code>, <code>/</code> y <code>%</code> tienen mayor precedencia que <code>+</code> y <code>-</code>.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int a = 5;
+int b = a++ + ++a;
+System.out.println(a + " " + b);`,answer:'7 12',why:'<code>a++</code> entrega 5 y deja a en 6. <code>++a</code> sube a 7 y entrega 7. b = 5 + 7 = 12.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int x = 3;
+int y = x++;
+System.out.println(x + " " + y);`,options:['4 3','4 4','3 3','3 4'],answer:0,why:'El post-incremento entrega el valor actual (3) y después suma 1 a x.'}},
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(-17 % 5);`,options:['-2','3','2','-3'],answer:0,why:'En Java el residuo toma el signo del dividendo: −17 = 5 × (−3) + (−2).'},
+   ref:{type:'input',prompt:'¿Qué imprime?',code:`System.out.println(17 % 5);`,answer:'2',why:'17 = 5 × 3 + 2. El residuo es 2.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`double d = 7 / 2 + 7 / 2.0;
+System.out.println(d);`,answer:'6.5',why:'<code>7 / 2</code> es 3 (enteros) y <code>7 / 2.0</code> es 3.5. 3 + 3.5 = 6.5.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(7 / 2.0);`,options:['3.5','3','3.0','4'],answer:0,why:'Si un operando tiene decimales, la división conserva los decimales.'}},
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println("Total: " + 2 + 3);`,options:['Total: 23','Total: 5','Total: 2 3','Error de compilación'],answer:0,why:'Se evalúa de izquierda a derecha: <code>"Total: " + 2</code> ya es texto, así que el 3 se pega como texto. Para sumar: <code>"Total: " + (2 + 3)</code>.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(2 + 3 + " puntos");`,options:['5 puntos','23 puntos','2 3 puntos','Error de compilación'],answer:0,why:'Primero <code>2 + 3 = 5</code> (ambos números) y luego se concatena el texto.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int x = 4;
+x *= 2 + x++;
+System.out.println(x);`,answer:'24',why:'Equivale a <code>x = 4 * (2 + x++)</code>. El x de la izquierda ya se leyó como 4; <code>x++</code> entrega 4. Resultado 4 × 6 = 24 (el incremento queda sobrescrito).'},
+   ref:{type:'input',prompt:'¿Qué imprime?',code:`int x = 5;
+x *= 2 + 3;
+System.out.println(x);`,answer:'25',why:'En una asignación compuesta el lado derecho se evalúa completo: <code>x = 5 * (2 + 3)</code>.'}}
+ ]},
+{id:'rel',title:'Operadores relacionales',tag:'== != < > <= >=',
+ ficha:{code:`int x = 8, y = 3;
+x > y          // true
+x % y == 2     // true: primero %, luego ==
+5 > 3 == 2 > 1 // true == true → true
+
+// 5 < x < 10  NO compila: (5 < x) es boolean
+5 < x && x < 10   // forma correcta
+
+0.1 + 0.2 == 0.3  // false: precisión de decimales`,
+ tips:['Precedencia: aritméticos, luego <code>&lt; &gt; &lt;= &gt;=</code>, luego <code>== !=</code>.','Un rango se escribe con dos comparaciones unidas por <code>&amp;&amp;</code>.','Los double no siempre son exactos: evita comparar decimales con <code>==</code>.','Un relacional siempre produce <code>true</code> o <code>false</code>.']},
+ stages:[
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`int a = 10, b = 3;
+System.out.println(a % b == 1 == true);`,options:['true','false','Error de compilación','1'],answer:0,why:'Se agrupa como <code>(a % b == 1) == true</code>: <code>true == true</code> es true. Compila, pero comparar con true es redundante.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(10 % 3 == 1);`,options:['true','false','1','Error de compilación'],answer:0,why:'<code>10 % 3</code> es 1 y <code>1 == 1</code> es true.'}},
+  {q:{type:'mc',codeOpts:true,check:'nocompile',pre:'int x = 7;',prompt:'Con <code>int x = 7;</code>, ¿cuál expresión NO compila?',options:['5 < x < 10','x > 5 == true','x != 5','x >= 5 && x <= 10'],answer:0,why:'<code>5 < x</code> produce un boolean, y no se puede comparar un boolean con <code>&lt; 10</code>.'},
+   ref:{type:'mc',codeOpts:true,check:'none',prompt:'¿Cómo se escribe "x está entre 5 y 10, sin incluirlos"?',options:['x > 5 && x < 10','5 < x < 10','x > 5 < 10','x > (5 && 10)'],answer:0,why:'Cada comparación debe estar completa y se unen con <code>&amp;&amp;</code>.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int x = 7, y = 7;
+boolean r = x++ == y;
+System.out.println(r + " " + x);`,answer:'true 8',why:'<code>x++</code> entrega 7 para la comparación (7 == 7) y luego x pasa a 8.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int a = 4;
+System.out.println(a++ == 4);`,options:['true','false','Error de compilación','5'],answer:0,why:'El post-incremento compara con el valor viejo (4) y después incrementa.'}},
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`double d = 0.1 + 0.2;
+System.out.println(d == 0.3);`,options:['false','true','Error de compilación','0.3'],answer:0,why:'0.1 y 0.2 no tienen representación binaria exacta: la suma da 0.30000000000000004. Por eso no se comparan decimales con <code>==</code>.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(1.0 / 4 == 0.25);`,options:['true','false','Error de compilación','0.25'],answer:0,why:'0.25 es una potencia de 2 (1/4) y sí se representa exacto. El problema aparece con valores como 0.1.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int a = 5, b = 8;
+boolean r = a + 3 >= b != b - a > 3;
+System.out.println(r);`,answer:'true',why:'<code>a + 3 >= b</code> → 8 >= 8 → true. <code>b - a > 3</code> → 3 > 3 → false. <code>true != false</code> → true.'},
+   ref:{type:'mc',check:'none',prompt:'En <code>a + 3 &gt;= b</code>, ¿qué se evalúa primero?',options:['a + 3','3 >= b','Todo a la vez','De derecha a izquierda'],answer:0,why:'Los aritméticos van antes que los relacionales.'}},
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`int a = 3, b = 3;
+System.out.println(a >= b == a <= b != a > b);`,options:['true','false','Error de compilación','3'],answer:0,why:'Primero los relacionales: true, true, false. Luego <code>==</code> y <code>!=</code> de izquierda a derecha: <code>(true == true) != false</code> → <code>true != false</code> → true.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(5 > 3 == 2 > 1);`,options:['true','false','Error de compilación','1'],answer:0,why:'<code>5 > 3</code> y <code>2 > 1</code> son true; <code>true == true</code> es true.'}}
+ ]},
+{id:'log',title:'Operadores lógicos',tag:'&& || ! · cortocircuito · De Morgan',
+ ficha:{code:`// Precedencia: !  luego  &&  luego  ||
+true || false && false    // true
+
+// Cortocircuito: la derecha puede no evaluarse
+int n = 0;
+boolean ok = n != 0 && 10 / n > 1;  // false, sin error
+
+// De Morgan
+!(A && B)  ==  !A || !B
+!(A || B)  ==  !A && !B`,
+ tips:['<code>A &amp;&amp; B</code>: si A es false, B no se evalúa. <code>A || B</code>: si A es true, B no se evalúa.','Si la parte derecha tiene <code>++</code>, puede que el incremento nunca ocurra.','Ordena las condiciones para protegerte: primero <code>n != 0</code>, luego la división.','Al negar una condición compuesta, cambia <code>&amp;&amp;</code> por <code>||</code> y niega cada parte.']},
+ stages:[
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`boolean a = false, b = true, c = true;
+System.out.println(!(a || b) && c || a);`,options:['false','true','Error de compilación','null'],answer:0,why:'<code>!(false || true)</code> = false. <code>false &amp;&amp; c</code> = false. <code>false || a</code> = false.'},
+   ref:{type:'mc',check:'none',prompt:'¿Cuál es el orden de precedencia, de mayor a menor?',options:['! luego && luego ||','&& luego || luego !','|| luego && luego !','Todos tienen la misma'],answer:0,why:'La negación se aplica primero; luego el Y; al final el O.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int x = 0;
+boolean r = (x > 0) && (++x > 0);
+System.out.println(r + " " + x);`,answer:'false 0',why:'<code>x > 0</code> es false, así que <code>++x</code> nunca se ejecuta. x sigue en 0.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int x = 0;
+boolean r = (x == 0) || (++x > 0);
+System.out.println(x);`,options:['0','1','true','Error de compilación'],answer:0,why:'La izquierda del <code>||</code> ya es true, así que la derecha no se evalúa.'}},
+  {q:{type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál es equivalente a <code>!(edad &gt;= 18 &amp;&amp; tieneCedula)</code>?',options:['edad < 18 || !tieneCedula','edad < 18 && !tieneCedula','edad <= 18 || !tieneCedula','!edad >= 18 && !tieneCedula'],answer:0,why:'De Morgan: <code>!(A &amp;&amp; B)</code> = <code>!A || !B</code>. La negación de <code>&gt;= 18</code> es <code>&lt; 18</code>.'},
+   ref:{type:'mc',codeOpts:true,check:'none',prompt:'Según De Morgan, <code>!(A || B)</code> equivale a:',options:['!A && !B','!A || !B','A && B','!A || B'],answer:0,why:'Negar un O produce un Y de las negaciones.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int a = 3, b = 0;
+boolean r = b != 0 && a / b > 1 || a > 2;
+System.out.println(r);`,answer:'true',why:'<code>b != 0</code> es false, la división no se evalúa (sin error). Queda <code>false || a > 2</code> → true.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int n = 0;
+System.out.println(n != 0 && 10 / n > 1);`,options:['false','true','Error: división entre cero','Error de compilación'],answer:0,why:'El cortocircuito evita la división entre cero.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int cuenta = 0;
+for (int i = 0; i < 10; i++) {
+    if (!(i % 2 == 0) && i > 3 || i == 0) {
+        cuenta++;
+    }
+}
+System.out.println(cuenta);`,answer:'4',why:'Cumplen los impares mayores que 3 (5, 7, 9) y además el 0 por el <code>||</code>. Total 4.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int i = 5;
+System.out.println(!(i % 2 == 0) && i > 3);`,options:['true','false','Error de compilación','5'],answer:0,why:'5 es impar (true) y 5 > 3 (true).'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (tres valores separados por espacio)',code:`int a = 1, b = 1;
+boolean r = a++ > 1 || b++ > 0 && a++ > 1;
+System.out.println(r + " " + a + " " + b);`,answer:'true 3 2',why:'Se agrupa como <code>a++ > 1 || (b++ > 0 &amp;&amp; a++ > 1)</code>. Izquierda: 1 > 1 false (a=2). Derecha: 1 > 0 true (b=2) y 2 > 1 true (a=3).'},
+   ref:{type:'mc',check:'none',prompt:'¿Cómo agrupa Java <code>A || B &amp;&amp; C</code>?',options:['A || (B && C)','(A || B) && C','Error de compilación','Depende de los valores'],answer:0,why:'<code>&amp;&amp;</code> tiene mayor precedencia, igual que la multiplicación frente a la suma.'}}
+ ]},
+{id:'cond',title:'if, else if, else',tag:'decisiones · anidamiento',
+ ficha:{code:`if (nota >= 4.5) {
+    System.out.println("Excelente");
+} else if (nota >= 3.0) {
+    System.out.println("Aprobado");
+} else {
+    System.out.println("Reprobado");
+}
+
+// Trampas clásicas
+if (x > 0);           // ese ; termina el if
+{ ... }               // este bloque se ejecuta SIEMPRE
+
+if (a) if (b) X(); else Y();  // el else es del if más cercano`,
+ tips:['En una cadena if / else if, se ejecuta solo el primer bloque verdadero.','Ordena de la condición más específica a la más general.','Sin llaves, el <code>else</code> se empareja con el <code>if</code> más cercano, sin importar la indentación.','Usa llaves siempre: eliminan las dos trampas anteriores.']},
+ stages:[
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`int x = 15;
+if (x > 10) {
+    if (x > 20) {
+        System.out.println("A");
+    } else {
+        System.out.println("B");
+    }
+} else {
+    System.out.println("C");
+}`,options:['B','A','C','A y B'],answer:0,why:'15 > 10 entra al bloque externo; 15 > 20 es false, entonces imprime B.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int x = 5;
+if (x > 10) {
+    System.out.println("A");
+} else {
+    System.out.println("B");
+}`,options:['B','A','A y B','Nada'],answer:0,why:'5 > 10 es false, así que se ejecuta el else.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? Lee con cuidado, la indentación engaña.',code:`int x = 5;
+if (x > 10)
+    if (x > 3)
+        System.out.println("A");
+else
+    System.out.println("B");
+System.out.println("C");`,answer:'C',why:'El else pertenece al if interno (<code>x > 3</code>). Como <code>x > 10</code> es false, no se entra a nada y solo se imprime C.'},
+   ref:{type:'mc',check:'none',prompt:'En Java, sin llaves, ¿con cuál if se empareja un else?',options:['Con el if más cercano que no tenga else','Con el if que indique la indentación','Con el primer if del programa','Es un error de compilación'],answer:0,why:'Java ignora la indentación. Por eso las llaves son una buena práctica obligatoria.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (si hay varias líneas, sepáralas con un espacio)',code:`int saldo = 0;
+if (saldo > 100);
+{
+    System.out.println("Rico");
+}
+System.out.println("Fin");`,answer:'Rico Fin',why:'El <code>;</code> tras el paréntesis termina el if con una instrucción vacía. El bloque entre llaves queda suelto y se ejecuta siempre.'},
+   ref:{type:'mc',check:'none',prompt:'¿Qué provoca el <code>;</code> en <code>if (condición);</code>?',options:['Termina el if: el bloque siguiente se ejecuta siempre','Nada, es opcional','Un error de compilación','Invierte la condición'],answer:0,why:'Es una instrucción vacía válida, por eso el compilador no avisa. Es un bug silencioso.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int p = 0;
+int n = 12;
+if (n % 2 == 0) {
+    p += 1;
+}
+if (n % 3 == 0) {
+    p += 2;
+} else if (n % 4 == 0) {
+    p += 4;
+}
+if (n > 10) {
+    p *= 2;
+} else {
+    p -= 1;
+}
+System.out.println(p);`,answer:'6',why:'Son tres estructuras independientes. p = 1, luego +2 = 3 (el else if se salta), luego ×2 = 6.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int n = 9, p = 0;
+if (n % 3 == 0) {
+    p += 2;
+} else if (n % 9 == 0) {
+    p += 5;
+}
+System.out.println(p);`,options:['2','7','5','0'],answer:0,why:'La primera condición ya es verdadera; el else if no se revisa aunque también lo sería.'}},
+  {q:{type:'mc',prompt:'¿Qué imprime?',code:`int n = 30;
+if (n % 3 == 0) {
+    System.out.println("Fizz");
+} else if (n % 5 == 0) {
+    System.out.println("Buzz");
+} else if (n % 15 == 0) {
+    System.out.println("FizzBuzz");
+} else {
+    System.out.println(n);
+}`,options:['Fizz','FizzBuzz','Buzz','30'],answer:0,why:'30 es múltiplo de 3 y la cadena se detiene ahí. La condición más específica (<code>% 15</code>) quedó inalcanzable.'},
+   ref:{type:'mc',codeOpts:true,check:'none',prompt:'Para que imprima "FizzBuzz" con 30, ¿qué condición debe ir primero?',options:['n % 15 == 0','n % 3 == 0','n % 5 == 0','n > 15'],answer:0,why:'Lo más específico va arriba; lo más general, abajo.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (sin espacios)',code:`int a = 4, b = 7;
+if (a > b || a % 2 == 0) {
+    System.out.print("X");
+    if (b % a == 3 && !(a > 5)) {
+        System.out.print("Y");
+    } else {
+        System.out.print("Z");
+    }
+}
+if (a + b > 10) {
+    System.out.print("W");
+}`,answer:'XYW',why:'a es par → X. <code>7 % 4 = 3</code> y <code>!(4 > 5)</code> es true → Y. 4 + 7 = 11 > 10 → W.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int a = 4, b = 7;
+System.out.println(b % a == 3 && !(a > 5));`,options:['true','false','3','Error de compilación'],answer:0,why:'7 % 4 es 3 (true) y 4 > 5 es false, negado da true.'}}
+ ]},
+{id:'for',title:'Bucle for',tag:'contadores · anidados · alcance',
+ ficha:{code:`for (int i = 1; i <= 5; i++) { ... }   // 5 vueltas
+for (int i = 10; i > 0; i -= 3) { ... } // 10, 7, 4, 1
+for (int i = 1; i < 100; i *= 3) { ... }// 1, 3, 9, 27, 81
+
+for (int i = 0; i < 3; i++) {          // anidado: 3 × 2
+    for (int j = 0; j < 2; j++) { ... }
+}
+// i no existe fuera del for`,
+ tips:['La condición se evalúa una vez más que las vueltas: la última evaluación es la que da false.','En bucles anidados, el interno completa todas sus vueltas por cada vuelta del externo.','Usa <code>&lt;</code> o <code>&gt;</code> como condición de salida, no <code>!=</code>: un salto puede pasarse del valor exacto.','La variable declarada en el for solo existe dentro del for.']},
+ stages:[
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int s = 0;
+for (int i = 1; i <= 10; i++) {
+    if (i % 3 == 0) {
+        s += i;
+    }
+}
+System.out.println(s);`,answer:'18',why:'Múltiplos de 3 hasta 10: 3 + 6 + 9 = 18.'},
+   ref:{type:'input',prompt:'¿Qué imprime?',code:`int s = 0;
+for (int i = 1; i <= 4; i++) {
+    s += i;
+}
+System.out.println(s);`,answer:'10',why:'1 + 2 + 3 + 4 = 10.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int c = 0;
+for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < i; j++) {
+        c += j;
+    }
+}
+System.out.println(c);`,answer:'4',why:'i=1 suma 0; i=2 suma 0+1; i=3 suma 0+1+2. Total 0 + 1 + 3 = 4.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int c = 0;
+for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 2; j++) {
+        c++;
+    }
+}
+System.out.println(c);`,options:['6','5','3','9'],answer:0,why:'3 vueltas externas × 2 internas = 6.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int veces = 0;
+for (int i = 1; i < 100; i *= 3) {
+    veces++;
+}
+System.out.println(veces);`,answer:'5',why:'i toma 1, 3, 9, 27, 81. El siguiente sería 243, que ya no cumple.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int veces = 0;
+for (int i = 0; i < 6; i += 2) {
+    veces++;
+}
+System.out.println(veces);`,options:['3','6','2','4'],answer:0,why:'i toma 0, 2 y 4.'}},
+  {q:{type:'mc',check:'none',prompt:'¿Qué pasa con este bucle?',code:`for (int i = 0; i != 10; i += 3) {
+    System.out.println(i);
+}`,options:['Es infinito','Se repite 3 veces','Se repite 4 veces','No compila'],answer:0,why:'i toma 0, 3, 6, 9, 12… y nunca vale exactamente 10. Con <code>i &lt; 10</code> terminaría.'},
+   ref:{type:'mc',codeOpts:true,check:'none',prompt:'Si i aumenta de 3 en 3, ¿qué condición de salida es más segura?',options:['i < 10','i != 10','i == 10','i > 10'],answer:0,why:'<code>&lt;</code> funciona aunque i salte por encima del límite.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (separa con espacios)',code:`for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= i; j++) {
+        System.out.print(i * j + " ");
+    }
+}`,answer:'1 2 4 3 6 9',why:'i=1: 1. i=2: 2, 4. i=3: 3, 6, 9.'},
+   ref:{type:'mc',codeOpts:true,prompt:'¿Qué imprime?',code:`for (int j = 1; j <= 3; j++) {
+    System.out.print(j * 2 + " ");
+}`,options:['2 4 6','1 2 3','2 4 6 8','0 2 4'],answer:0,why:'j toma 1, 2 y 3; se imprime el doble de cada uno.'}},
+  {q:{type:'mc',check:'err',prompt:'¿Qué ocurre?',code:`for (int i = 0; i < 3; i++) {
+    System.out.print(i);
+}
+System.out.println(i);`,options:['Error de compilación: i no existe fuera del for','Imprime 0123','Imprime 012 y luego 2','Imprime 012 y luego 0'],answer:0,why:'El alcance de i es solo el for. Si necesitas su valor después, declárala antes del bucle.'},
+   ref:{type:'mc',check:'none',prompt:'¿Dónde existe una variable declarada en <code>for (int i = 0; ...)</code>?',options:['Solo dentro del for','En todo el programa','Solo en la condición','Hasta el final del archivo'],answer:0,why:'Nace al iniciar el for y desaparece al terminar.'}}
+ ]},
+{id:'while',title:'while y do-while',tag:'centinelas · dígitos · algoritmos',
+ ficha:{code:`// Extraer dígitos
+while (n > 0) {
+    int digito = n % 10;   // último dígito
+    n = n / 10;            // lo elimina
+}
+
+// do-while: al menos una vez
+do {
+    dig++;
+    n /= 10;
+} while (n > 0);           // ojo con el ;`,
+ tips:['<code>n % 10</code> da el último dígito; <code>n / 10</code> lo quita.','do-while es ideal cuando el bloque debe ejecutarse al menos una vez (menús, validación, contar dígitos de 0).','El cambio de la variable de control debe estar DENTRO del bucle.','Combina condiciones con <code>&amp;&amp;</code>: el bucle sigue mientras ambas se cumplan.']},
+ stages:[
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int n = 6, pasos = 0;
+while (n != 1) {
+    if (n % 2 == 0) {
+        n = n / 2;
+    } else {
+        n = 3 * n + 1;
+    }
+    pasos++;
+}
+System.out.println(pasos);`,answer:'8',why:'Secuencia de Collatz: 6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1. Son 8 pasos.'},
+   ref:{type:'input',prompt:'¿Qué imprime?',code:`int n = 8, p = 0;
+while (n > 1) {
+    n /= 2;
+    p++;
+}
+System.out.println(p);`,answer:'3',why:'8 → 4 → 2 → 1. Tres divisiones.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int n = 1203, inv = 0;
+while (n > 0) {
+    inv = inv * 10 + n % 10;
+    n /= 10;
+}
+System.out.println(inv);`,answer:'3021',why:'Cada vuelta toma el último dígito y lo agrega a la derecha de inv: 3, 30, 302, 3021.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(1203 % 10);`,options:['3','120','1','0'],answer:0,why:'El residuo de dividir entre 10 es siempre el último dígito.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int x = 20;
+int c = 0;
+do {
+    x -= 7;
+    c++;
+} while (x > 0);
+System.out.println(c + " " + x);`,answer:'3 -1',why:'x: 13, 6, −1. Tres vueltas; al llegar a −1 la condición es false.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int x = -5;
+do {
+    x++;
+} while (x > 0);
+System.out.println(x);`,options:['-4','-5','0','Bucle infinito'],answer:0,why:'Se ejecuta una vez (x = −4) y la condición es false.'}},
+  {q:{type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int a = 0, b = 20;
+while (a < b && b % 3 != 0) {
+    a += 4;
+    b -= 1;
+}
+System.out.println(a + " " + b);`,answer:'8 18',why:'(0, 20) → (4, 19) → (8, 18). 18 es múltiplo de 3 y el bucle termina.'},
+   ref:{type:'mc',check:'none',prompt:'¿Cuándo termina <code>while (A &amp;&amp; B)</code>?',options:['Cuando A o B sea false','Cuando ambas sean false','Solo cuando A sea false','Nunca'],answer:0,why:'Un Y necesita ambas verdaderas para seguir; basta una falsa para salir.'}},
+  {q:{type:'input',prompt:'¿Qué imprime?',code:`int n = 0, dig = 0;
+do {
+    dig++;
+    n /= 10;
+} while (n > 0);
+System.out.println(dig);`,answer:'1',why:'El 0 tiene un dígito. El do-while lo cuenta bien; un while daría 0.'},
+   ref:{type:'mc',prompt:'¿Qué imprime?',code:`int n = 0, dig = 0;
+while (n > 0) {
+    dig++;
+    n /= 10;
+}
+System.out.println(dig);`,options:['0','1','Bucle infinito','Error de compilación'],answer:0,why:'La condición es false desde el inicio y el bloque nunca se ejecuta.'}},
+  {q:{type:'mc',check:'none',prompt:'¿Qué pasa con este programa?',code:`int i = 10;
+while (i > 0) {
+    System.out.println(i);
+}
+i--;`,options:['Bucle infinito: i-- está fuera del bucle','Imprime de 10 a 1','No compila','Imprime 10 una sola vez'],answer:0,why:'Dentro del bucle nada cambia i, así que <code>i > 0</code> es true para siempre.'},
+   ref:{type:'mc',check:'none',prompt:'Para que un while termine, dentro del bloque debe…',options:['Cambiar la variable de la condición hasta volverla false','Imprimir algo','Tener un if','Declarar una constante'],answer:0,why:'Cada vuelta debe acercar la condición a false.'}}
+ ]}
+];
+
+const BUGS=[
+ {code:`int contador = 0
+contador++;
+System.out.println(contador);`,lines:[0],hint:'Revisa cómo termina cada instrucción.',why:'Falta <code>;</code> al final de la línea 1.'},
+ {code:`final int LIMITE = 3;
+for (int i = 0; i < LIMITE; i++) {
+    LIMITE = LIMITE + 1;
+}`,lines:[2],hint:'¿Qué significa final?',why:'<code>LIMITE</code> es constante: no admite otra asignación.'},
+ {code:`int edad = 20;
+if (edad = 18) {
+    System.out.println("Justo 18");
+}`,lines:[1],hint:'¿Asignar o comparar?',why:'<code>=</code> asigna; para comparar se usa <code>==</code>.'},
+ {code:`int i = 0;
+while (i < 5) {
+    System.out.println(i);
+    i--;
+}`,lines:[3],hint:'¿La variable se acerca o se aleja de la salida?',why:'<code>i--</code> aleja a i de 5: bucle infinito.'},
+ {code:`int suma = 0;
+for (int i = 1; i < 10; i++) {
+    suma += i;
+}
+System.out.println("Suma de 1 a 10: " + suma);`,lines:[1],hint:'Compila, pero ¿cumple lo que promete el mensaje?',why:'<code>i &lt; 10</code> excluye el 10. Debe ser <code>i &lt;= 10</code>.'},
+ {code:`int x = 5;
+if (x > 0 && < 10) {
+    System.out.println("Rango válido");
+}`,lines:[1],hint:'Cada lado de && debe ser una comparación completa.',why:'Debe ser <code>x > 0 &amp;&amp; x &lt; 10</code>.'},
+ {code:`int total = 0;
+for (int i = 1; i <= 5; i++); {
+    total += i;
+}
+System.out.println(total);`,lines:[1],hint:'Mira el final de la línea del for.',why:'El <code>;</code> termina el for vacío. El bloque queda fuera y además i ya no existe: no compila.'},
+ {code:`int n1 = 4, n2 = 5;
+double promedio = (n1 + n2) / 2;
+System.out.println(promedio);  // se espera 4.5`,lines:[1],hint:'¿Qué tipo de división ocurre entre dos int?',why:'<code>9 / 2</code> es división entera: da 4 y se guarda como 4.0. Usa <code>/ 2.0</code>.'},
+ {code:`int n = 5;
+int factorial = 0;
+for (int i = 1; i <= n; i++) {
+    factorial *= i;
+}
+System.out.println(factorial);`,lines:[1],hint:'¿Cuánto da cualquier número multiplicado por el valor inicial?',why:'Todo número por 0 da 0. Un acumulador de productos inicia en 1.'},
+ {code:`int intentos = 3;
+do {
+    System.out.println("Clave incorrecta");
+    intentos--;
+} while (intentos > 0)`,lines:[4],hint:'El do-while tiene una puntuación especial al final.',why:'El do-while termina con <code>;</code> después del paréntesis.'},
+ {code:`int edad = 70;
+if (edad >= 18) {
+    System.out.println("Adulto");
+} else if (edad >= 65) {
+    System.out.println("Adulto mayor");
+}`,lines:[1,3],hint:'¿Puede llegar a imprimirse "Adulto mayor" alguna vez?',why:'Todo el que tiene 65 o más ya cumple <code>edad >= 18</code>. La condición más específica debe ir primero.'},
+ {code:`int n = 8;
+boolean esPar = n % 2 = 0;
+System.out.println(esPar);`,lines:[1],hint:'¿Qué operador produce un boolean?',why:'<code>= 0</code> intenta asignar. Debe ser <code>n % 2 == 0</code>.'},
+ {code:`int x = 10;
+if (x > 20)
+    System.out.println("Grande");
+    System.out.println("Confirmado: mayor que 20");`,lines:[1,3],hint:'¿Cuántas líneas controla un if sin llaves?',why:'Sin llaves, el if controla solo la línea siguiente. "Confirmado" se imprime siempre. Usa llaves.'},
+ {code:`int n = 0;
+int i = 1;
+while (i <= 10) {
+    n += i;
+}
+i++;`,lines:[5],hint:'¿Dónde debe cambiar la variable de control?',why:'<code>i++</code> está fuera del bucle: i nunca cambia y el bucle es infinito.'}
+];
+
+const PARSONS=[
+ {task:'Imprime la tabla del 7, del 7 x 1 al 7 x 10.',lines:[`final int TABLA = 7;`,`for (int i = 1; i <= 10; i++) {`,`    System.out.println(TABLA + " x " + i + " = " + TABLA * i);`,`}`],distract:[`for (int i = 0; i <= 10; i++) {`,`TABLA = 7;`]},
+ {task:'Clasifica una nota en la escala de 0.0 a 5.0.',lines:[`double nota = 3.8;`,`if (nota >= 4.5) {`,`    System.out.println("Excelente");`,`} else if (nota >= 3.0) {`,`    System.out.println("Aprobado");`,`} else {`,`    System.out.println("Reprobado");`,`}`],distract:[`} else (nota >= 3.0) {`,`} else if (nota < 4.5) {`]},
+ {task:'Cuenta cuántos dígitos tiene un número positivo.',lines:[`int n = 98765;`,`int dig = 0;`,`while (n > 0) {`,`    dig++;`,`    n /= 10;`,`}`,`System.out.println(dig);`],distract:[`    n %= 10;`,`while (n >= 0) {`],accept:[[0,1,2,3,4,5,6],[1,0,2,3,4,5,6],[0,1,2,4,3,5,6],[1,0,2,4,3,5,6]]},
+ {task:'Dibuja un triángulo de asteriscos de 4 filas: *, **, ***, ****.',lines:[`for (int i = 1; i <= 4; i++) {`,`    for (int j = 1; j <= i; j++) {`,`        System.out.print("*");`,`    }`,`    System.out.println();`,`}`],distract:[`    for (int j = 1; j <= 4; j++) {`,`    for (int i = 1; i <= i; i++) {`]},
+ {task:'Clasifica una edad como "Menor", "Mayor" o "Edad inválida" usando una constante.',lines:[`final int MAYORIA = 18;`,`int edad = 20;`,`if (edad >= 0 && edad < MAYORIA) {`,`    System.out.println("Menor");`,`} else if (edad >= MAYORIA) {`,`    System.out.println("Mayor");`,`} else {`,`    System.out.println("Edad inválida");`,`}`],distract:[`if (0 <= edad < MAYORIA) {`,`} else if (edad >= MAYORIA); {`]},
+ {task:'Suma 1 + 2 + 3… con do-while hasta que la suma supere 50 e imprime el resultado.',lines:[`int suma = 0;`,`int i = 1;`,`do {`,`    suma += i;`,`    i++;`,`} while (suma <= 50);`,`System.out.println(suma);`],distract:[`} while (suma > 50);`,`} while (suma <= 50)`],accept:[[0,1,2,3,4,5,6],[1,0,2,3,4,5,6]]},
+ {task:'Imprime los números del 1 al 30 que son múltiplos de 3 pero NO de 2.',lines:[`for (int n = 1; n <= 30; n++) {`,`    if (n % 3 == 0 && n % 2 != 0) {`,`        System.out.println(n);`,`    }`,`}`],distract:[`    if (n % 3 == 0 || n % 2 != 0) {`,`    if (n % 3 == 0 && !n % 2 == 0) {`]}
+];
+
+const TRACES=[
+ {code:`int a = 3;
+int b = 7;
+a = a + b;
+b = a - b;
+a = a - b;`,vars:{a:'7',b:'3'},cols:['Paso','a','b'],trace:[['inicio','3','7'],['a = a + b','10','7'],['b = a - b','10','3'],['a = a - b','7','3']],why:'Intercambio sin variable auxiliar.'},
+ {code:`int a = 2, b = 3;
+for (int i = 0; i < 3; i++) {
+    int t = a;
+    a = b;
+    b = t + b;
+}`,vars:{a:'8',b:'13'},cols:['Vuelta','t','a','b'],trace:[['inicio','—','2','3'],['i = 0','2','3','5'],['i = 1','3','5','8'],['i = 2','5','8','13']],why:'Es la sucesión de Fibonacci: cada término es la suma de los dos anteriores.'},
+ {code:`int contador = 0;
+int n = 15;
+while (n > 0) {
+    if (n % 2 == 0) {
+        contador++;
+    }
+    n -= 4;
+}`,vars:{contador:'0',n:'-1'},cols:['Paso','contador','n'],trace:[['inicio','0','15'],['15 impar','0','11'],['11 impar','0','7'],['7 impar','0','3'],['3 impar','0','-1']],why:'Restar 4 a un impar da impar: contador nunca sube.'},
+ {code:`int x = 10, y = 0;
+while (x > 0) {
+    if (x % 3 == 0) {
+        y += x;
+    } else {
+        y -= 1;
+    }
+    x -= 2;
+}`,vars:{x:'0',y:'2'},cols:['Vuelta','x al entrar','y al salir'],trace:[['1','10','-1'],['2','8','-2'],['3','6','4'],['4','4','3'],['5','2','2']],why:'Solo el 6 es múltiplo de 3 y suma; los demás restan 1. x termina en 0.'},
+ {code:`int a = 3;
+int b = a++ * 2;
+int c = ++a + b--;`,vars:{a:'5',b:'5',c:'11'},cols:['Línea','a','b','c'],trace:[['int a = 3','3','—','—'],['b = a++ * 2','4','6','—'],['c = ++a + b--','5','5','11']],why:'<code>a++</code> entrega 3 (b = 6). <code>++a</code> entrega 5 y <code>b--</code> entrega 6: c = 11; luego b queda en 5.'},
+ {code:`int s = 0, k = 1;
+do {
+    s += k * k;
+    k += 2;
+} while (s < 30);`,vars:{s:'35',k:'7'},cols:['Vuelta','s','k'],trace:[['1','1','3'],['2','10','5'],['3','35','7']],why:'Suma de cuadrados de impares: 1 + 9 + 25 = 35.'},
+ {code:`int pares = 0;
+int impares = 0;
+for (int i = 1; i <= 7; i++) {
+    if (i % 2 == 0) {
+        pares++;
+    } else {
+        impares++;
+    }
+}`,vars:{pares:'3',impares:'4'},cols:['i','pares','impares'],trace:[['1..7','2, 4, 6','1, 3, 5, 7']],why:'Tres pares y cuatro impares.'},
+ {code:`int m = 0, total = 0;
+for (int i = 1; i <= 3; i++) {
+    for (int j = i; j <= 3; j++) {
+        total += i * j;
+        m++;
+    }
+}`,vars:{m:'6',total:'25'},cols:['i','j recorre','aporte a total'],trace:[['1','1, 2, 3','1 + 2 + 3 = 6'],['2','2, 3','4 + 6 = 10'],['3','3','9']],why:'6 combinaciones (3 + 2 + 1). Total 6 + 10 + 9 = 25.'},
+ {code:`int n = 4096;
+int suma = 0;
+int vueltas = 0;
+while (n > 0) {
+    suma += n % 10;
+    n /= 10;
+    vueltas++;
+}`,vars:{suma:'19',n:'0',vueltas:'4'},cols:['Vuelta','dígito','suma','n'],trace:[['1','6','6','409'],['2','9','15','40'],['3','0','15','4'],['4','4','19','0']],why:'Suma de dígitos: 6 + 9 + 0 + 4 = 19.'}
+];
+
+const DUELS=[
+ {task:'Calcular el total con IVA.',good:`final double IVA = 0.19;
+double total = precio + precio * IVA;`,bad:`double total = precio + precio * 0.19;`,why:'0.19 es un número mágico. Una constante con nombre explica el valor y se cambia en un solo lugar.'},
+ {task:'Avisar si se puede retirar dinero.',good:`if (saldo > 0) {
+    System.out.println("Puede retirar");
+}`,bad:`if (saldo > 0)
+    System.out.println("Puede retirar");`,why:'Sin llaves, una línea agregada después quedaría fuera del if sin que nadie lo note.'},
+ {task:'Revisar si un estudiante aprobó.',good:`if (aprobado) {
+    System.out.println("Felicitaciones");
+}`,bad:`if (aprobado == true) {
+    System.out.println("Felicitaciones");
+}`,why:'<code>aprobado</code> ya es boolean; compararlo con true es redundante.'},
+ {task:'Guardar el total de estudiantes del curso.',good:`int totalEstudiantes = 32;`,bad:`int TE = 32;`,why:'Nombre descriptivo en camelCase. Las siglas obligan a adivinar.'},
+ {task:'Permitir votar a mayores de edad con cédula.',good:`if (edad >= 18 && tieneCedula) {
+    System.out.println("Puede votar");
+}`,bad:`if (edad >= 18) {
+    if (tieneCedula) {
+        System.out.println("Puede votar");
+    }
+}`,why:'Si ambas condiciones llevan a la misma acción, <code>&amp;&amp;</code> evita anidar.'},
+ {task:'Imprimir los números del 1 al 10.',good:`for (int i = 1; i <= 10; i++) {
+    System.out.println(i);
+}`,bad:`int i = 1;
+while (i <= 10) {
+    System.out.println(i);
+    i = i + 1;
+}`,why:'Con un número conocido de vueltas, for reúne inicio, condición y avance, y limita el alcance de i.'},
+ {task:'Clasificar una nota en rangos excluyentes.',good:`if (nota >= 4.5) {
+    System.out.println("Excelente");
+} else if (nota >= 3.0) {
+    System.out.println("Aprobado");
+}`,bad:`if (nota >= 4.5) {
+    System.out.println("Excelente");
+}
+if (nota >= 3.0) {
+    System.out.println("Aprobado");
+}`,why:'Con ifs separados, 4.8 imprime ambos mensajes. else if garantiza una sola salida.'},
+ {task:'Guardar si un número es par.',good:`boolean esPar = n % 2 == 0;`,bad:`boolean esPar;
+if (n % 2 == 0) {
+    esPar = true;
+} else {
+    esPar = false;
+}`,why:'La comparación ya produce el boolean. Asignarlo directo es más corto y no deja espacio a errores.'},
+ {task:'Calcular el promedio de tres notas.',good:`double promedio = (n1 + n2 + n3) / 3.0;`,bad:`double promedio = n1 + n2 + n3 / 3;`,why:'Sin paréntesis solo n3 se divide. Con <code>3.0</code> además se evita la división entera.'},
+ {task:'Evitar dividir entre cero al validar un promedio.',good:`if (cantidad != 0 && total / cantidad > 10) {
+    System.out.println("Buen promedio");
+}`,bad:`if (total / cantidad > 10 && cantidad != 0) {
+    System.out.println("Buen promedio");
+}`,why:'El cortocircuito protege solo si la validación va primero. En la otra versión la división ocurre antes de comprobar.'},
+ {task:'Repetir mientras queden intentos (se descuentan de 2 en 2).',good:`int intentos = 5;
+while (intentos > 0) {
+    intentos -= 2;
+}`,bad:`int intentos = 5;
+while (intentos != 0) {
+    intentos -= 2;
+}`,why:'5, 3, 1, −1… nunca vale 0 exacto: la versión con <code>!=</code> es infinita.'},
+ {task:'Declarar el número máximo de intentos permitidos.',good:`final int MAX_INTENTOS = 3;`,bad:`final int maxIntentos = 3;`,why:'Las constantes van en MAYÚSCULAS con guion bajo. Así se distinguen a simple vista de las variables.'}
+];
+
+/* Expresiones del Rayo booleano: [texto, función con división entera] */
+const BLITZ=[
+ ['a % b == a % (b + 1)',(a,b,c)=>a%b===a%(b+1)],['a / 2 * 2 == a',(a,b,c)=>Math.trunc(a/2)*2===a],['(a + b) % 2 == 0 && !c',(a,b,c)=>(a+b)%2===0&&!c],
+ ['a > b || b > a && c',(a,b,c)=>a>b||(b>a&&c)],['!(!c || a == b)',(a,b,c)=>!(!c||a===b)],['a % 4 == 0 || a % 3 == 0 && b > 6',(a,b,c)=>a%4===0||(a%3===0&&b>6)],
+ ['a * b % 5 == 0',(a,b,c)=>(a*b)%5===0],['!(a < 5) && !(b < 5)',(a,b,c)=>!(a<5)&&!(b<5)],['a - b * 2 > 0',(a,b,c)=>a-b*2>0],
+ ['c && a % 2 != 0 || !c && b % 2 == 0',(a,b,c)=>(c&&a%2!==0)||(!c&&b%2===0)],['a / b >= 1',(a,b,c)=>Math.trunc(a/b)>=1],['a % b == 0 != c',(a,b,c)=>(a%b===0)!==c],
+ ['a + b / 3 > 8',(a,b,c)=>a+Math.trunc(b/3)>8],['!(a > 6 && b > 6) == c',(a,b,c)=>!(a>6&&b>6)===c],['a >= b == b >= a',(a,b,c)=>(a>=b)===(b>=a)],
+ ['(a % 3 + b % 3) % 3 == 0',(a,b,c)=>(a%3+b%3)%3===0],['a * 2 - b * 3 >= 0 || !c',(a,b,c)=>a*2-b*3>=0||!c],['!c != (a > b)',(a,b,c)=>(!c)!==(a>b)]
+];
+
+/* Examen: banco de 40, se sortean 30 */
+const EXAM=[
+ {type:'input',prompt:'¿Qué imprime?',code:`int a = 7, b = 2;
+int r = a / b * b + a % b;
+System.out.println(r);`,answer:'7',why:'3 × 2 + 1 = 7. Siempre se cumple (a / b) * b + a % b == a.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int x = 5;
+x *= 2 + 3;
+System.out.println(x);`,answer:'25',why:'<code>x = 5 * (2 + 3)</code>.'},
+ {type:'mc',prompt:'¿Qué ocurre al ejecutar?',code:`int n = 0;
+boolean r = (n != 0) && (10 / n > 1);
+System.out.println(r);`,options:['false','true','Error: división entre cero','No compila'],answer:0,why:'El cortocircuito evita la división.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int c = 0;
+for (int i = 1; i <= 4; i++) {
+    for (int j = i; j <= 4; j++) {
+        c++;
+    }
+}
+System.out.println(c);`,answer:'10',why:'4 + 3 + 2 + 1 = 10.'},
+ {type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál de estos bucles es infinito?',options:['int i = 10; while (i != 0) { i -= 3; }','for (int i = 0; i < 10; i += 2) { }','int i = 0; do { i++; } while (i < 3);','for (int i = 5; i > 0; i--) { }'],answer:0,why:'10, 7, 4, 1, −2… nunca vale exactamente 0.'},
+ {type:'input',prompt:'¿Qué imprime exactamente? (sin espacios)',code:`int p = 72;
+if (p >= 50 && p % 2 == 0) {
+    System.out.print("A");
+} else if (p >= 70) {
+    System.out.print("B");
+}
+if (p > 70 || p < 0) {
+    System.out.print("C");
+} else {
+    System.out.print("D");
+}`,answer:'AC',why:'Dos estructuras independientes: A en la primera y C en la segunda.'},
+ {type:'mc',check:'none',prompt:'¿Qué línea produce un error de compilación?',code:`final int MAX = 5;
+int total = MAX * 2;
+total++;
+MAX--;`,options:['Línea 4','Línea 1','Línea 2','Línea 3'],answer:0,why:'<code>MAX--</code> modifica una constante.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int n = 4096;
+int suma = 0;
+while (n > 0) {
+    suma += n % 10;
+    n /= 10;
+}
+System.out.println(suma);`,answer:'19',why:'6 + 9 + 0 + 4 = 19.'},
+ {type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál expresión es equivalente a <code>!(a &gt; 3 || b &lt; 2)</code>?',options:['a <= 3 && b >= 2','a <= 3 || b >= 2','a < 3 && b > 2','!a > 3 && !b < 2'],answer:0,why:'De Morgan: negar un O da un Y de las negaciones.'},
+ {type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int i = 10;
+int veces = 0;
+do {
+    veces++;
+    i += 5;
+} while (i < 10);
+System.out.println(veces + " " + i);`,answer:'1 15',why:'Una ejecución garantizada; luego 15 < 10 es false.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(true || false && false);`,options:['true','false','Error de compilación','null'],answer:0,why:'<code>&amp;&amp;</code> primero: <code>true || false</code>.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int r = 0;
+for (int i = 1; i <= 20; i++) {
+    if (i % 3 == 0 && i % 5 != 0) {
+        r++;
+    }
+}
+System.out.println(r);`,answer:'5',why:'3, 6, 9, 12, 18 (el 15 se excluye).'},
+ {type:'mc',check:'none',prompt:'Un programa debe pedir la contraseña y repetir mientras sea incorrecta. ¿Qué estructura es la más adecuada?',options:['do-while','for','if / else','while (true) sin condición de salida'],answer:0,why:'Hay que pedirla al menos una vez antes de verificar.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int a = 3, b = 8;
+while (a < b) {
+    a += 2;
+    b -= 1;
+}
+System.out.println(a + b);`,answer:'13',why:'(3, 8) → (5, 7) → (7, 6). 7 + 6 = 13.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`double prom = (3 + 4) / 2;
+System.out.println(prom);`,options:['3.0','3.5','3','Error de compilación'],answer:0,why:'División entera (3) guardada en double: 3.0.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int a = 10;
+a += a++ + ++a;
+System.out.println(a);`,answer:'32',why:'Se lee a = 10 para la izquierda. <code>a++</code> entrega 10 (a=11), <code>++a</code> entrega 12. 10 + 22 = 32.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(1 + 2 + "3" + 4 + 5);`,options:['3345','15','12345','339'],answer:0,why:'1 + 2 = 3 (números); luego todo es texto: "3" + "3" + "4" + "5".'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int i = 0;
+while (i++ < 3) {
+}
+System.out.println(i);`,answer:'4',why:'Se compara con el valor viejo: 0, 1, 2 entran; con 3 la condición falla, pero el incremento ocurre igual: i = 4.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int s = 0;
+for (int i = 0, j = 10; i < j; i += 2, j -= 3) {
+    s += j - i;
+}
+System.out.println(s);`,answer:'15',why:'(0, 10) aporta 10; (2, 7) aporta 5; (4, 4) ya no cumple. Total 15.'},
+ {type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál bucle se repite exactamente 5 veces?',options:['for (int i = 5; i > 0; i--)','for (int i = 0; i <= 5; i++)','for (int i = 1; i < 5; i++)','for (int i = 10; i > 0; i -= 3)'],answer:0,why:'5, 4, 3, 2, 1. Los otros se repiten 6, 4 y 4 veces.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int x = 0;
+for (int i = 1; i <= 5; i++) {
+    for (int j = 1; j <= 5; j++) {
+        if ((i + j) % 4 == 0) {
+            x++;
+        }
+    }
+}
+System.out.println(x);`,answer:'6',why:'Pares con suma 4: (1,3), (2,2), (3,1). Con suma 8: (3,5), (4,4), (5,3).'},
+ {type:'mc',check:'out',prompt:'¿Qué imprime?',code:`int x = 15;
+if (x > 10)
+    if (x > 20)
+        System.out.print("A");
+else
+    System.out.print("B");`,options:['B','No imprime nada','A','AB'],answer:0,why:'El else pertenece al if interno: 15 > 10 entra, 15 > 20 es false → B.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int n = 37;
+int c = 0;
+for (int d = 1; d <= n; d++) {
+    if (n % d == 0) {
+        c++;
+    }
+}
+System.out.println(c);`,answer:'2',why:'37 es primo: solo es divisible entre 1 y 37.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int a = 1, b = 1, t;
+for (int i = 0; i < 6; i++) {
+    t = a + b;
+    a = b;
+    b = t;
+}
+System.out.println(b);`,answer:'21',why:'Fibonacci: 2, 3, 5, 8, 13, 21.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(10 / 3 * 3.0);`,options:['9.0','10.0','9','9.999'],answer:0,why:'<code>10 / 3</code> es 3 (enteros) y luego 3 × 3.0 = 9.0.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(5 / 2.0 == 5 / 2);`,options:['false','true','Error de compilación','2.5'],answer:0,why:'2.5 frente a 2: no son iguales.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int x = 7;
+x %= 4;
+x *= x + 1;
+System.out.println(x);`,answer:'12',why:'7 % 4 = 3; luego 3 × (3 + 1) = 12.'},
+ {type:'multi',codeOpts:true,check:'compile',pre:'int x = 5;',prompt:'Con <code>int x = 5;</code>, selecciona TODAS las líneas que compilan.',options:['boolean b = x > 3 && x < 9;','boolean b = 3 < x < 9;','boolean b = !(x == 5);','boolean b = !x == 5;','boolean b = x = 5;'],answer:[0,2],why:'<code>3 &lt; x &lt; 9</code> compara un boolean con 9. <code>!x</code> niega un int. <code>x = 5</code> es una asignación, no un boolean.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int n = 0;
+do {
+    n += 3;
+} while (n % 4 != 0);
+System.out.println(n);`,answer:'12',why:'3, 6, 9, 12: el primer múltiplo de 3 que también lo es de 4.'},
+ {type:'mc',check:'none',prompt:'¿Cuántas veces se evalúa la condición en <code>for (int i = 0; i &lt; 3; i++)</code>?',options:['4','3','2','1'],answer:0,why:'Tres veces da true (0, 1, 2) y una cuarta da false para salir.'},
+ {type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int a = 5, b = 10;
+if (a > 3 || ++b > 10) {
+    a++;
+}
+System.out.println(a + " " + b);`,answer:'6 10',why:'La izquierda del <code>||</code> es true: <code>++b</code> nunca ocurre.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int total = 0;
+int i = 1;
+while (i <= 20) {
+    if (i % 2 == 0 && i % 3 == 0) {
+        total += i;
+    }
+    i++;
+}
+System.out.println(total);`,answer:'36',why:'Múltiplos de 6: 6 + 12 + 18 = 36.'},
+ {type:'mc',check:'err',prompt:'¿Qué ocurre?',code:`final int A = 4;
+int b = A * A--;
+System.out.println(b);`,options:['Error de compilación','16','12','Error al ejecutar'],answer:0,why:'<code>A--</code> intenta modificar una constante.'},
+ {type:'input',prompt:'¿Qué imprime? (dos valores separados por espacio)',code:`int x = 3;
+int y = x-- - --x;
+System.out.println(x + " " + y);`,answer:'1 2',why:'<code>x--</code> entrega 3 (x=2); <code>--x</code> deja x en 1 y entrega 1. y = 3 − 1 = 2.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int i;
+for (i = 0; i < 5; i++) {
+}
+System.out.println(i);`,answer:'5',why:'Declarada fuera del for, i sobrevive al bucle con el valor que hizo fallar la condición.'},
+ {type:'input',prompt:'¿Qué imprime? (separa los grupos con un espacio)',code:`for (int i = 3; i >= 1; i--) {
+    for (int j = 1; j <= i; j++) {
+        System.out.print(j);
+    }
+    System.out.print(" ");
+}`,answer:'123 12 1',why:'Cada fila imprime de 1 hasta i, con i bajando de 3 a 1.'},
+ {type:'mc',prompt:'¿Qué imprime?',code:`System.out.println(5 > 3 == 2 > 1);`,options:['true','false','Error de compilación','1'],answer:0,why:'<code>(5 > 3) == (2 > 1)</code> → <code>true == true</code>.'},
+ {type:'input',prompt:'¿Qué imprime?',code:`int n = 10, s = 0;
+while (n > 0) {
+    s += n % 3;
+    n -= 3;
+}
+System.out.println(s);`,answer:'4',why:'n: 10, 7, 4, 1 → todos dejan residuo 1. Suma 4.'},
+ {type:'mc',codeOpts:true,check:'none',prompt:'¿Cuál condición es true solo si EXACTAMENTE una de A o B es true?',options:['(A || B) && !(A && B)','A || B','A && B','!(A || B)'],answer:0,why:'Al menos una (<code>A || B</code>) pero no ambas (<code>!(A &amp;&amp; B)</code>). Es el "o exclusivo".'},
+ {type:'input',prompt:'¿Qué imprime?',code:`System.out.println(17 / 5 % 2 + 17 % 5 / 2);`,answer:'2',why:'<code>17 / 5 % 2</code> = 3 % 2 = 1. <code>17 % 5 / 2</code> = 2 / 2 = 1. Total 2.'}
+];
+
+
+const GAMES=[
+ {id:'bug',title:'Caza el bug',kind:'Depuración',glyph:'!=',desc:`${BUGS.length} programas con errores de sintaxis y de lógica. Toca la línea culpable; el primer intento vale más.`},
+ {id:'parsons',title:'Arma el código',kind:'Rompecabezas de Parsons',glyph:'{ }',desc:`${PARSONS.length} programas para ordenar. Cada uno esconde dos líneas trampa casi idénticas a las buenas.`},
+ {id:'trace',title:'Rastreador',kind:'Prueba de escritorio',glyph:'i++',desc:`${TRACES.length} rastreos con incrementos, bucles anidados y hasta tres variables a la vez.`},
+ {id:'blitz',title:'Rayo booleano',kind:'Contrarreloj 45 s',glyph:'&&',desc:'Expresiones con %, división entera y tres operadores lógicos. x2 con 4 aciertos seguidos, x3 con 8.'},
+ {id:'duel',title:'Duelo de estilo',kind:'Buenas prácticas',glyph:'A|B',desc:`${DUELS.length} duelos. Elige el código que aprobaría una revisión profesional.`}
+];
+const EXAM_N=30, EXAM_MIN=45;
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s).trim().toLowerCase().replace(/\s+/g,' ').replace(/^"|"$/g,'');
+const sameSet=(a,b)=>a.length===b.length&&a.slice().sort().every((v,i)=>v===b.slice().sort()[i]);
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Resaltado ---------- */
+const KW=new Set(['int','double','boolean','final','if','else','for','while','do','true','false','String','char']);
+const FN=new Set(['System','out','println','print']);
+function hlLine(line){
+  let out='',last=0,m; const re=/(\/\/.*$)|("(?:[^"\\]|\\.)*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)/g;
+  while((m=re.exec(line))){
+    out+=esc(line.slice(last,m.index));
+    if(m[1]) out+=`<span class="t-com">${esc(m[1])}</span>`;
+    else if(m[2]) out+=`<span class="t-str">${esc(m[2])}</span>`;
+    else if(m[3]) out+=`<span class="t-num">${m[3]}</span>`;
+    else {const w=m[4]; out+=KW.has(w)?`<span class="t-kw">${w}</span>`:FN.has(w)?`<span class="t-fn">${w}</span>`:w;}
+    last=re.lastIndex;
+  }
+  return out+esc(line.slice(last));
+}
+const codeBlock=src=>`<pre class="code"><code>${src.split('\n').map((l,i)=>`<span class="cl"><span class="ln">${i+1}</span>${hlLine(l)}</span>`).join('')}</code></pre>`;
+const optLabel=(q,i)=>q.codeOpts?`<code>${esc(q.options[i])}</code>`:esc(q.options[i]);
+
+/* ---------- Progreso ---------- */
+const LEVELS=[{xp:0,name:'Semilla'},{xp:300,name:'Variable'},{xp:750,name:'Operador'},{xp:1400,name:'Condicional'},{xp:2200,name:'Bucle'},{xp:3200,name:'Leyenda Java'}];
+const BADGES=[
+ {id:'primer',g:';',name:'Primer paso',desc:'Responde tu primer ejercicio'},
+ {id:'perfecta',g:'★★★',name:'Ruta perfecta',desc:'Termina un tema legendario sin errores'},
+ {id:'campamento',g:'7/7',name:'Campamento completo',desc:'Completa los 7 temas del repaso'},
+ {id:'racha',g:'x8',name:'Imparable',desc:'8 aciertos seguidos'},
+ {id:'cazabugs',g:'bug',name:'Cazabugs',desc:'10 bugs al primer intento'},
+ {id:'arquitecto',g:'{ }',name:'Arquitectura',desc:`Arma los ${PARSONS.length} programas`},
+ {id:'rastreador',g:'i++',name:'Rastreador',desc:`Completa los ${TRACES.length} rastreos`},
+ {id:'rayo',g:'&&',name:'Rayo booleano',desc:'300 puntos en Rayo booleano'},
+ {id:'estilo',g:'camel',name:'Código limpio',desc:`10 de ${DUELS.length} en Duelo de estilo`},
+ {id:'jefe',g:'final',name:'Jefe derrotado',desc:'Aprueba el examen con 3.0 o más'},
+ {id:'leyenda',g:'5.0',name:'Leyenda',desc:'Examen con 4.5 o más'}
+];
+const KEY='javaquest.legendario.v1';
+const fresh=()=>({xp:0,streak:0,topics:{},games:{},badges:[],examBest:null,examUnlocked:false,name:''});
+let S=fresh();
+try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(fresh(),JSON.parse(r));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+function level(){let i=0;LEVELS.forEach((l,k)=>{if(S.xp>=l.xp)i=k;});return i;}
+function renderHUD(){
+  const i=level(),cur=LEVELS[i],nxt=LEVELS[i+1];
+  const p=nxt?Math.round((S.xp-cur.xp)/(nxt.xp-cur.xp)*100):100;
+  $('#lvl-ring').style.setProperty('--p',p);
+  $('#lvl-n').textContent=i+1; $('#lvl-name').textContent=cur.name;
+  $('#lvl-xp').textContent=nxt?`${S.xp} / ${nxt.xp} XP`:`${S.xp} XP`;
+  const st=$('#streak'); st.textContent=`racha ${S.streak}`; st.classList.toggle('hot',S.streak>=3);
+  $('#badges').innerHTML='<span class="lbl">Insignias</span>'+BADGES.map(b=>{const on=S.badges.includes(b.id);return `<span class="medal ${on?'on':''}" tabindex="0" aria-label="${b.name}: ${b.desc}${on?' (obtenida)':' (bloqueada)'}">${b.g}<span class="tip"><b>${b.name}</b><br>${b.desc}</span></span>`;}).join('');
+  renderMission();
+}
+function toast(html,cls=''){const t=document.createElement('div');t.className='toast '+cls;t.innerHTML=html;$('#toasts').appendChild(t);setTimeout(()=>t.remove(),2600);}
+function addXP(n,why){if(n<=0)return;const before=level();S.xp+=n;save();toast(`<span class="x">+${n} XP</span> · ${why}`);if(level()>before){toast(`<span class="x">Nivel ${level()+1}</span> · ${LEVELS[level()].name}`,'badge');burst();}renderHUD();}
+function badge(id){if(S.badges.includes(id))return;S.badges.push(id);save();const b=BADGES.find(x=>x.id===id);toast(`<span class="x">Insignia</span> · ${b.name}`,'badge');burst();renderHUD();}
+function hit(ok){
+  badge('primer');
+  if(ok){S.streak++; if(S.streak>=3) addXP(5,`racha de ${S.streak}`); if(S.streak>=8) badge('racha');}
+  else S.streak=0;
+  save();renderHUD();
+}
+const topicsDone=()=>TOPICS.filter(t=>S.topics[t.id]).length;
+const gamesDone=()=>GAMES.filter(g=>S.games[g.id]&&S.games[g.id].done).length;
+const examOpen=()=>S.examUnlocked||(topicsDone()>=6&&gamesDone()>=4);
+
+/* ---------- Confeti ---------- */
+const cv=$('#confetti'),cx=cv.getContext('2d');let parts=[],raf=null;
+function burst(){
+  if(reduced)return; cv.width=innerWidth;cv.height=innerHeight;
+  const cols=['#ff8f2b','#2c6aa0','#45d394','#e8c47c','#ff6e62'];
+  for(let i=0;i<90;i++)parts.push({x:innerWidth/2,y:innerHeight/3,vx:(Math.random()-.5)*12,vy:Math.random()*-10-3,s:Math.random()*6+4,c:cols[i%5],r:Math.random()*6,life:90});
+  if(!raf)loop();
+}
+function loop(){cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.life-->0);parts.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.1;cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=Math.min(1,p.life/30);cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore();});raf=parts.length?requestAnimationFrame(loop):(cx.clearRect(0,0,cv.width,cv.height),null);}
+
+/* ---------- Modal ---------- */
+function ask(title,text,okLabel='Confirmar'){return new Promise(res=>{const m=$('#modal');$('#modal-t').textContent=title;$('#modal-p').textContent=text;$('#modal-ok').textContent=okLabel;m.hidden=false;$('#modal-ok').focus();const done=v=>{m.hidden=true;res(v);};$('#modal-ok').onclick=()=>done(true);$('#modal-no').onclick=()=>done(false);});}
+
+/* ---------- Navegación ---------- */
+const VIEWS=['repaso','juegos','examen','guia'];
+let curView='repaso';
+function show(v,scroll=true){
+  if(!VIEWS.includes(v))v='repaso'; curView=v;
+  $$('.view').forEach(s=>s.hidden=s.dataset.v!==v);
+  $$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.view===v));
+  if(v==='examen'&&!EX.running)renderExam();
+  renderMission();
+  if(scroll)$('#view-'+v).scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});
+}
+$$('.tab').forEach(t=>t.onclick=()=>show(t.dataset.view));
+$('.brand').onclick=e=>{e.preventDefault();show('repaso');};
+function renderMission(){
+  const td=topicsDone(),gd=gamesDone(),open=examOpen();
+  const st=[
+    {v:'repaso',g:'1',name:'Campamento',sub:`${td}/7 temas`,done:td===7},
+    {v:'juegos',g:'2',name:'Arena',sub:`${gd}/5 juegos`,done:gd===5},
+    {v:'examen',g:open?'3':'lock',name:'Jefe final',sub:S.examBest!=null?`mejor nota ${S.examBest.toFixed(1)}`:open?'disponible':'bloqueado',done:S.examBest!=null&&S.examBest>=3,locked:!open}
+  ];
+  $('#mission').innerHTML=st.map(s=>`<li><button class="station ${s.v===curView?'active':''} ${s.done?'complete':''} ${s.locked?'locked':''}" data-go="${s.v}"><span class="node">${s.done?'✓':s.g==='lock'?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>':s.g}</span><strong>${s.name}</strong><small>${s.sub}</small></button></li>`).join('');
+  $$('#mission .station').forEach(b=>b.onclick=()=>show(b.dataset.go));
+}
+
+/* ---------- Preguntas (práctica) ---------- */
+function prepQ(q){if(q.type!=='input')q._ord=shuffle(q.options.map((_,i)=>i));return q;}
+function practiceQ(el,q,label,cb){
+  prepQ(q);
+  const body=q.type==='mc'?`<div class="opts">${q._ord.map(i=>`<button class="opt" data-i="${i}">${optLabel(q,i)}</button>`).join('')}</div>`
+   :q.type==='multi'?`<p class="multi-hint">Varias respuestas correctas · marca todas y luego comprueba</p><div class="opts">${q._ord.map(i=>`<button class="opt" data-i="${i}" aria-pressed="false">${optLabel(q,i)}</button>`).join('')}</div><div><button class="btn primary" id="mchk" disabled>Comprobar selección</button></div>`
+   :`<form class="ans-form"><label class="sr" for="ans-in">Tu respuesta</label><input id="ans-in" class="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe la salida exacta"><button class="btn primary">Comprobar</button></form>`;
+  el.innerHTML=`<div class="qcard"><p class="q-label">${label}</p><p class="q-prompt">${q.prompt}</p>${q.code?codeBlock(q.code):''}${body}<div class="feedback" hidden></div></div>`;
+  const fb=$('.feedback',el);
+  const finish=ok=>{
+    hit(ok);
+    fb.className='feedback '+(ok?'ok':'bad');fb.hidden=false;
+    fb.innerHTML=`<strong>${ok?'¡Correcto!':'No es correcto'}</strong>${!ok&&q.type==='input'?`<p>Respuesta esperada: <code>${esc(q.answer)}</code></p>`:''}<p>${q.why}</p><div><button class="btn primary" id="cont">Continuar →</button></div>`;
+    $('#cont',fb).onclick=()=>cb(ok);$('#cont',fb).focus();
+  };
+  if(q.type==='mc'){
+    $$('.opt',el).forEach(b=>b.onclick=()=>{const ok=+b.dataset.i===q.answer;$$('.opt',el).forEach(x=>{x.disabled=true;if(+x.dataset.i===q.answer)x.classList.add('right');});if(!ok)b.classList.add('wrong');finish(ok);});
+  }else if(q.type==='multi'){
+    const sel=new Set();
+    $$('.opt',el).forEach(b=>b.onclick=()=>{const i=+b.dataset.i;sel.has(i)?sel.delete(i):sel.add(i);b.classList.toggle('sel');b.setAttribute('aria-pressed',sel.has(i));$('#mchk',el).disabled=!sel.size;});
+    $('#mchk',el).onclick=()=>{const ok=sameSet([...sel],q.answer);$('#mchk',el).disabled=true;
+      $$('.opt',el).forEach(x=>{const i=+x.dataset.i,good=q.answer.includes(i);x.disabled=true;x.classList.remove('sel');if(good&&sel.has(i))x.classList.add('right');else if(!good&&sel.has(i))x.classList.add('wrong');else if(good)x.classList.add('right','miss');});
+      finish(ok);};
+  }else{
+    const f=$('form',el),inp=$('input',el);inp.focus({preventScroll:true});
+    f.onsubmit=e=>{e.preventDefault();if(!inp.value.trim())return;const ok=norm(q.answer)===norm(inp.value);inp.disabled=true;$('button',f).disabled=true;finish(ok);};
+  }
+}
+
+/* ---------- Repaso ---------- */
+function renderTopicGrid(){
+  $('#topic-grid').innerHTML=TOPICS.map((t,i)=>{const s=S.topics[t.id];const n=s?s.stars:0;
+    return `<button class="card" data-t="${t.id}"><span class="num">Tema ${String(i+1).padStart(2,'0')}</span><h3>${t.title}</h3><p class="mono">${esc(t.tag)}</p><div class="meta"><span class="stars" aria-label="${n} de 3 estrellas">${[1,2,3].map(k=>`<span class="${k<=n?'on':''}">★</span>`).join('')}</span><span class="chip ${s?'ok':'java'}">${s?'completado':t.stages.length+' ejercicios'}</span></div></button>`;}).join('');
+  $$('#topic-grid .card').forEach(c=>c.onclick=()=>openTopic(c.dataset.t));
+}
+let TR=null;
+function openTopic(id){
+  const t=TOPICS.find(x=>x.id===id);TR={t,si:0,phase:'q',errors:0,res:[]};
+  $('#topic-grid').hidden=true;$('#repaso-head').hidden=true;$('#topic-stage').hidden=false;
+  renderTopic();$('#view-repaso').scrollIntoView({behavior:reduced?'auto':'smooth'});
+}
+function closeTopic(){TR=null;$('#topic-stage').hidden=true;$('#topic-grid').hidden=false;$('#repaso-head').hidden=false;renderTopicGrid();}
+function routeHTML(){
+  const n=TR.t.stages.length;
+  return `<div class="route" aria-label="Ruta del tema">${TR.t.stages.map((_,i)=>{const r=TR.res[i];
+    const cls=r?(r.main?'ok':'bad'):(i===TR.si&&!TR.done?'cur':'');
+    const sup=r&&r.ref!==undefined?`<sup>${r.ref?'R✓':'R✗'}</sup>`:(i===TR.si&&TR.phase==='ref'?'<sup>R</sup>':'');
+    return `<span class="step ${cls}">E${i+1}${sup}</span>${i<n-1?'<span class="arrow">→</span>':''}`;}).join('')}</div>`;
+}
+function renderTopic(){
+  const t=TR.t,i=TOPICS.indexOf(t),n=t.stages.length;
+  $('#topic-stage').innerHTML=`<div class="grid">
+   <button class="back" id="tb">← Todos los temas</button>
+   <div class="topic-layout">
+    <aside class="ficha"><p class="eyebrow">Tema ${i+1} · Ficha legendaria</p><h3>${t.title}</h3>${codeBlock(t.ficha.code)}<ul class="tips">${t.ficha.tips.map(x=>`<li>${x}</li>`).join('')}</ul></aside>
+    <div class="runner">${routeHTML()}<div id="q-area"></div></div>
+   </div></div>`;
+  $('#tb').onclick=closeTopic;
+  if(TR.done){topicDone();return;}
+  const st=t.stages[TR.si];
+  if(TR.phase==='q')practiceQ($('#q-area'),st.q,`Ejercicio ${TR.si+1} de ${n}${TR.si>=n-2?' · Reto':''}`,onTopicAns);
+  else practiceQ($('#q-area'),st.ref,`Ruta de refuerzo · ejercicio ${TR.si+1}`,onTopicAns);
+}
+function onTopicAns(ok){
+  if(!ok)TR.errors++;
+  if(TR.phase==='q'){
+    TR.res[TR.si]={main:ok};
+    if(ok){addXP(TR.si>=TR.t.stages.length-2?35:25,`Ejercicio ${TR.si+1}`);nextStage();}
+    else TR.phase='ref';
+  }else{
+    TR.res[TR.si].ref=ok;if(ok)addXP(10,'Refuerzo superado');nextStage();
+  }
+  renderTopic();
+}
+function nextStage(){TR.si++;TR.phase='q';if(TR.si>=TR.t.stages.length)TR.done=true;}
+function topicDone(){
+  const t=TR.t,stars=TR.errors===0?3:TR.errors<=2?2:1,prev=S.topics[t.id];
+  const mainOK=TR.res.filter(r=>r.main).length;
+  if(!prev)addXP(40,'Tema completado');
+  S.topics[t.id]={stars:Math.max(stars,prev?prev.stars:0)};save();
+  if(stars===3)badge('perfecta');if(topicsDone()===7)badge('campamento');
+  renderHUD();
+  const i=TOPICS.indexOf(t),next=TOPICS[i+1];
+  $('#q-area').innerHTML=`<div class="done-card"><p class="eyebrow">Ruta terminada</p><div class="big-stars">${[1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('')}</div>
+   <p><b>${mainOK} de ${t.stages.length}</b> ejercicios principales al primer intento · ${TR.errors} error${TR.errors===1?'':'es'} en total.</p>
+   <p>${stars===3?'Ruta perfecta en modo legendario. Dominas el tema.':stars===2?'Muy bien. Repite la ruta para buscar las 3 estrellas: las opciones cambian de orden.':'Completaste la ruta. Repasa la ficha y vuelve a intentarlo.'}</p>
+   <div class="row"><button class="btn" id="rep">Repetir ruta</button>${next?`<button class="btn primary" id="nx">Siguiente: ${next.title} →</button>`:`<button class="btn primary" id="ar">Ir a la Arena de juegos →</button>`}</div></div>`;
+  $('#rep').onclick=()=>openTopic(t.id);
+  if(next)$('#nx').onclick=()=>openTopic(next.id);else $('#ar').onclick=()=>{closeTopic();show('juegos');};
+}
+
+/* ---------- Juegos ---------- */
+function renderGameGrid(){
+  $('#game-grid').innerHTML=GAMES.map(g=>{const s=S.games[g.id];
+    return `<button class="card game-card" data-g="${g.id}"><div class="row" style="justify-content:space-between"><span class="gk">${g.kind}</span><span class="glyph">${esc(g.glyph)}</span></div><h3>${g.title}</h3><p>${g.desc}</p><div class="meta"><span class="chip ${s&&s.done?'ok':'java'}">${s&&s.done?'completado':'por jugar'}</span>${s&&s.best!=null?`<span class="chip">récord ${s.best}</span>`:''}</div></button>`;}).join('');
+  $$('#game-grid .card').forEach(c=>c.onclick=()=>openGame(c.dataset.g));
+}
+let blitzTimer=null;
+function openGame(id){
+  $('#game-grid').hidden=true;$('#juegos-head').hidden=true;const st=$('#game-stage');st.hidden=false;
+  ({bug:gBug,parsons:gParsons,trace:gTrace,blitz:gBlitz,duel:gDuel})[id](st);
+  $('#view-juegos').scrollIntoView({behavior:reduced?'auto':'smooth'});
+}
+function closeGame(){clearInterval(blitzTimer);document.onkeydown=null;$('#game-stage').hidden=true;$('#game-grid').hidden=false;$('#juegos-head').hidden=false;renderGameGrid();}
+function head(id,i,n,extra=''){const g=GAMES.find(x=>x.id===id);return `<div class="ghead"><button class="back" data-back>← Todos los juegos</button><div class="row"><div><p class="eyebrow">${g.kind}</p><h3>${g.title}</h3></div><span class="chip">${extra||`Ronda ${Math.min(i+1,n)} de ${n}`}</span></div><div class="gbar"><i style="width:${i/n*100}%"></i></div></div>`;}
+function wireBack(st){$$('[data-back]',st).forEach(b=>b.onclick=closeGame);}
+function markGame(id,best){const s=S.games[id]||{};s.done=true;if(best!=null)s.best=s.best==null?best:Math.max(s.best,best);S.games[id]=s;save();renderMission();}
+function endScreen(st,id,title,text,again){
+  st.innerHTML=head(id,1,1,'Terminado')+`<div class="done-card"><p class="eyebrow">Resultado</p><h3>${title}</h3><p>${text}</p><div class="row"><button class="btn" id="ag">Jugar de nuevo</button><button class="btn primary" data-back>Elegir otro juego →</button></div></div>`;
+  wireBack(st);$('#ag').onclick=again;
+}
+
+function gBug(st){
+  const rounds=shuffle(BUGS);let i=0,first=0;
+  function draw(){
+    const r=rounds[i];let tries=0,solved=false;
+    st.innerHTML=head('bug',i,rounds.length)+`<div class="qcard"><p class="q-prompt">Toca la línea que contiene el error.</p><div class="bug-code">${r.code.split('\n').map((l,k)=>`<button class="bline" data-k="${k}" aria-label="Línea ${k+1}"><span class="ln">${k+1}</span>${hlLine(l)}</button>`).join('')}</div><div class="feedback" hidden></div></div>`;
+    wireBack(st);const fb=$('.feedback',st);
+    $$('.bline',st).forEach(b=>b.onclick=()=>{
+      if(solved)return;const k=+b.dataset.k;
+      if(r.lines.includes(k)){solved=true;$$('.bline',st).forEach(x=>{x.disabled=true;if(r.lines.includes(+x.dataset.k))x.classList.add('hit');});hit(true);
+        if(tries===0){first++;addXP(25,'Bug al primer intento');}else addXP(10,'Bug encontrado');
+        fb.className='feedback ok';fb.hidden=false;fb.innerHTML=`<strong>¡Bug cazado!</strong><p>${r.why}</p><div><button class="btn primary" id="nx">${i<rounds.length-1?'Siguiente bug →':'Ver resultado'}</button></div>`;
+        $('#nx').onclick=()=>{i++;i<rounds.length?draw():end();};$('#nx').focus();
+      }else{tries++;b.classList.add('miss');b.disabled=true;hit(false);fb.className='feedback bad';fb.hidden=false;fb.innerHTML=`<strong>Esa línea está bien.</strong><p>Pista: ${r.hint}</p>`;}
+    });
+  }
+  function end(){markGame('bug',first);if(first>=10)badge('cazabugs');endScreen(st,'bug',`${first} de ${rounds.length} al primer intento`,first>=10?'Ojo de depurador legendario.':'Lee cada línea con dos preguntas: ¿compila? y ¿hace lo que promete? Vuelve a intentarlo.',()=>gBug(st));}
+  draw();
+}
+
+function gParsons(st){
+  let p=0,firstOK=0;
+  function draw(){
+    const P=PARSONS[p];let attempts=0;
+    let bank=shuffle(P.lines.concat(P.distract).map((t,k)=>({t,k})));let sol=[];
+    const accepted=(P.accept||[P.lines.map((_,i)=>i)]).map(a=>a.map(i=>P.lines[i]));
+    function paint(msg){
+      st.innerHTML=head('parsons',p,PARSONS.length)+`<div class="qcard"><p class="q-label">Misión</p><p class="q-prompt">${P.task}</p><p class="lead">Toca una línea del banco para agregarla; toca una línea de tu programa para devolverla. Hay ${P.distract.length} líneas trampa.</p>
+      <div class="parsons"><div class="pzone"><h4>Banco de líneas</h4>${bank.length?bank.map((l,k)=>`<button class="pline" data-b="${k}">${hlLine(l.t)}</button>`).join(''):'<p class="empty-hint">Banco vacío</p>'}</div>
+      <div class="pzone sol"><h4>Tu programa</h4>${sol.length?sol.map((l,k)=>`<button class="pline" data-s="${k}"><span class="pn">${k+1}</span>${hlLine(l.t)}</button>`).join(''):'<p class="empty-hint">Agrega líneas aquí en orden</p>'}</div></div>
+      <div class="row"><button class="btn primary" id="chk" ${sol.length?'':'disabled'}>Comprobar programa</button><button class="btn" id="rs">Reiniciar</button></div>${msg||''}</div>`;
+      wireBack(st);
+      $$('[data-b]',st).forEach(b=>b.onclick=()=>{sol.push(bank.splice(+b.dataset.b,1)[0]);paint();});
+      $$('[data-s]',st).forEach(b=>b.onclick=()=>{bank.push(sol.splice(+b.dataset.s,1)[0]);paint();});
+      $('#rs').onclick=()=>{bank=shuffle(bank.concat(sol));sol=[];paint();};
+      $('#chk').onclick=check;
+    }
+    function check(){
+      const seq=sol.map(x=>x.t);
+      const ok=accepted.some(a=>a.length===seq.length&&a.every((v,i)=>v===seq[i]));
+      if(ok){hit(true);if(attempts===0){firstOK++;addXP(45,'Programa armado al primer intento');}else addXP(20,'Programa armado');
+        st.querySelector('.qcard').insertAdjacentHTML('beforeend',`<div class="feedback ok"><strong>¡Compila y cumple la misión!</strong><p>Las líneas trampa eran:</p>${codeBlock(P.distract.map(x=>x.trim()).join('\n'))}<div><button class="btn primary" id="nx">${p<PARSONS.length-1?'Siguiente programa →':'Ver resultado'}</button></div></div>`);
+        $('#chk').disabled=true;$$('.pline',st).forEach(b=>b.disabled=true);$('#nx').onclick=()=>{p++;p<PARSONS.length?draw():end();};$('#nx').focus();
+      }else{attempts++;hit(false);
+        const canon=accepted[0];const inPlace=seq.filter((v,i)=>v===canon[i]).length;const traps=sol.filter(x=>x.k>=P.lines.length).length;
+        paint(`<div class="feedback bad"><strong>Todavía no.</strong><p>${inPlace} de ${canon.length} líneas en su posición correcta.${traps?` Tu programa incluye ${traps} línea${traps>1?'s':''} trampa.`:''}${seq.length-traps<canon.length?` Faltan ${canon.length-(seq.length-traps)} líneas válidas.`:''}</p></div>`);
+      }
+    }
+    paint();
+  }
+  function end(){markGame('parsons',firstOK);badge('arquitecto');endScreen(st,'parsons',`${firstOK} de ${PARSONS.length} al primer intento`,'Ordenar código entrena la lectura de estructura: dónde abre y cierra cada bloque y qué línea casi correcta en realidad rompe el programa.',()=>gParsons(st));}
+  draw();
+}
+
+function gTrace(st){
+  let i=0,score=0;const rounds=TRACES;
+  function draw(){
+    const T=rounds[i],names=Object.keys(T.vars);let att=0;
+    st.innerHTML=head('trace',i,rounds.length)+`<div class="qcard"><p class="q-prompt">¿Cuál es el valor final de ${names.map(n=>`<code>${n}</code>`).join(names.length>2?', ':' y ')}?</p>${codeBlock(T.code)}
+     <form class="trace-inputs" id="tf">${names.map(n=>`<label for="tv-${n}">${n} =<input id="tv-${n}" class="ans" data-v="${n}" inputmode="numeric" autocomplete="off"></label>`).join('')}<button class="btn primary" style="align-self:end">Comprobar</button></form><div id="tfb"></div></div>`;
+    wireBack(st);
+    const form=$('#tf');
+    form.onsubmit=e=>{e.preventDefault();
+      const ins=$$('input',form);if(ins.some(x=>!x.value.trim()))return;
+      let all=true;ins.forEach(x=>{const ok=norm(x.value)===T.vars[x.dataset.v];x.classList.toggle('right',ok);x.classList.toggle('wrong',!ok);if(!ok)all=false;});
+      if(all){hit(true);addXP(att===0?35:15,'Rastreo correcto');score+=att===0?2:1;reveal(true);}
+      else{att++;hit(false);$('#tfb').innerHTML=att>=2?`<div class="feedback bad"><strong>Dos intentos fallidos.</strong><div><button class="btn" id="sol">Ver la prueba de escritorio</button></div></div>`:`<div class="feedback bad"><strong>Revisa los campos en rojo.</strong><p>Haz una tabla y anota el valor de cada variable línea por línea.</p></div>`;
+        if(att>=2)$('#sol').onclick=()=>reveal(false);}
+    };
+    function reveal(ok){
+      $$('input,button',form).forEach(x=>x.disabled=true);
+      $('#tfb').innerHTML=`<div class="feedback ${ok?'ok':'info'}"><strong>${ok?'¡Exacto!':'Así se rastrea'}</strong><div class="tbl-wrap"><table class="trace-table"><thead><tr>${T.cols.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${T.trace.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p>${T.why}</p><div><button class="btn primary" id="nx">${i<rounds.length-1?'Siguiente →':'Ver resultado'}</button></div></div>`;
+      $('#nx').onclick=()=>{i++;i<rounds.length?draw():end();};$('#nx').focus();
+    }
+  }
+  function end(){markGame('trace',score);badge('rastreador');endScreen(st,'trace',`${score} de ${rounds.length*2} puntos de precisión`,'La prueba de escritorio es la habilidad que más usarás para encontrar errores de lógica antes de ejecutar.',()=>gTrace(st));}
+  draw();
+}
+
+function gBlitz(st){
+  const DUR=45;let score=0,streak=0,mult=1,left=DUR,q=null,running=false,answered=0,right=0;
+  const best=(S.games.blitz&&S.games.blitz.best)||0;
+  function newQ(){const a=1+Math.floor(Math.random()*12),b=1+Math.floor(Math.random()*12),c=Math.random()<.5;const t=BLITZ[Math.floor(Math.random()*BLITZ.length)];q={a,b,c,txt:t[0],val:t[1](a,b,c)};}
+  function intro(){
+    st.innerHTML=head('blitz',0,1,`Récord: ${best}`)+`<div class="blitz"><p class="q-prompt">45 segundos. Evalúa cada expresión con los valores dados.</p><p class="lead">Recuerda: la división entre int descarta decimales y <code>&amp;&amp;</code> va antes que <code>||</code>. Racha de 4 = x2; racha de 8 = x3. Un error reinicia el multiplicador. En computador usa <code>V</code> (true) y <code>F</code> (false).</p><button class="btn primary" id="go">Comenzar</button></div>`;
+    wireBack(st);$('#go').onclick=start;
+  }
+  function start(){running=true;newQ();paint();clearInterval(blitzTimer);blitzTimer=setInterval(()=>{left--;const tb=$('#tb');if(tb)tb.style.width=(left/DUR*100)+'%';const tl=$('#tl');if(tl)tl.textContent=left;if(left<=0)end();},1000);
+    document.onkeydown=e=>{if(!running)return;const k=e.key.toLowerCase();if(k==='v'||k==='t')ans(true);if(k==='f')ans(false);};}
+  function paint(cls=''){
+    st.innerHTML=head('blitz',DUR-left,DUR,`${left} s`)+`<div class="blitz ${cls}"><div class="timebar"><i id="tb" style="width:${left/DUR*100}%"></i></div>
+     <div class="blitz-stats"><div class="stat"><b id="tl">${left}</b><span>segundos</span></div><div class="stat"><b>${score}</b><span>puntos</span></div><div class="stat ${mult>1?'hot':''}"><b>x${mult}</b><span>multiplicador</span></div></div>
+     <p class="ctx">int a = ${q.a}; int b = ${q.b}; boolean c = ${q.c};</p><div class="expr">${hlLine(q.txt)}</div>
+     <div class="tf"><button class="t" data-a="1">true</button><button class="f" data-a="0">false</button></div></div>`;
+    wireBack(st);$$('.tf button',st).forEach(b=>b.onclick=()=>ans(b.dataset.a==='1'));
+  }
+  function ans(v){if(!running)return;answered++;const ok=v===q.val;
+    if(ok){right++;streak++;mult=streak>=8?3:streak>=4?2:1;score+=10*mult;}else{streak=0;mult=1;}
+    newQ();paint(ok?'flash-ok':'flash-bad');}
+  function end(){if(!running)return;running=false;clearInterval(blitzTimer);document.onkeydown=null;
+    const xp=Math.min(100,Math.floor(score/5));addXP(xp,'Rayo booleano');markGame('blitz',score);if(score>=300)badge('rayo');
+    endScreen(st,'blitz',`${score} puntos`,`${right} de ${answered} correctas.${score>best?' ¡Nuevo récord personal!':` Tu récord es ${Math.max(best,score)}.`}`,()=>gBlitz(st));}
+  intro();
+}
+
+function gDuel(st){
+  const rounds=shuffle(DUELS);let i=0,good=0;
+  function draw(){
+    const r=rounds[i],goodLeft=Math.random()<.5,sides=goodLeft?[r.good,r.bad]:[r.bad,r.good];
+    st.innerHTML=head('duel',i,rounds.length)+`<div class="qcard"><p class="q-label">Misión</p><p class="q-prompt">${r.task} ¿Qué versión aprobarías en una revisión de código?</p>
+     <div class="duel">${sides.map((c,k)=>`<button class="duel-opt" data-g="${(k===0)===goodLeft?1:0}"><span class="tag">Opción ${k?'B':'A'}</span>${codeBlock(c)}</button>`).join('')}</div><div class="feedback" hidden></div></div>`;
+    wireBack(st);const fb=$('.feedback',st);
+    $$('.duel-opt',st).forEach(b=>b.onclick=()=>{const ok=b.dataset.g==='1';$$('.duel-opt',st).forEach(x=>{x.disabled=true;x.classList.add(x.dataset.g==='1'?'right':'wrong');});hit(ok);if(ok){good++;addXP(15,'Buena práctica');}
+      fb.className='feedback '+(ok?'ok':'bad');fb.hidden=false;fb.innerHTML=`<strong>${ok?'Aprobado en revisión':'Esa versión no pasaría la revisión'}</strong><p>${r.why}</p><div><button class="btn primary" id="nx">${i<rounds.length-1?'Siguiente duelo →':'Ver resultado'}</button></div>`;
+      $('#nx').onclick=()=>{i++;i<rounds.length?draw():end();};$('#nx').focus();});
+  }
+  function end(){markGame('duel',good);if(good>=10)badge('estilo');endScreen(st,'duel',`${good} de ${rounds.length} duelos ganados`,'El código se escribe una vez y se lee muchas. Las buenas prácticas son para quien lo lee después.',()=>gDuel(st));}
+  draw();
+}
+
+/* ---------- Examen ---------- */
+const EX={running:false};
+function renderExam(){
+  const el=$('#exam-stage');
+  if(!examOpen()){
+    const td=topicsDone(),gd=gamesDone();
+    el.innerHTML=`<div class="boss"><p class="lead">El jefe final legendario se desbloquea cuando demuestres preparación.</p><div class="lockbox">
+     <div class="req ${td>=6?'met':''}"><span>Completa 6 temas del repaso</span><b class="mono">${Math.min(td,6)}/6</b></div>
+     <div class="req ${gd>=4?'met':''}"><span>Completa 4 juegos de la Arena</span><b class="mono">${Math.min(gd,4)}/4</b></div></div>
+     <div class="row"><button class="btn primary" id="gor">Ir al repaso</button><button class="linkbtn" id="unl">Desbloqueo docente</button></div></div>`;
+    $('#gor').onclick=()=>show('repaso');
+    $('#unl').onclick=async()=>{if(await ask('Desbloquear examen','Esta opción es para la docente. El examen quedará disponible en este navegador sin cumplir los requisitos.','Desbloquear')){S.examUnlocked=true;save();renderExam();renderMission();}};
+    return;
+  }
+  el.innerHTML=`<div class="boss"><p class="lead">Preguntas de nivel legendario sorteadas de un banco de ${EXAM.length}. Combinan todos los temas e incluyen preguntas con varias respuestas correctas. No hay retroalimentación hasta entregar.</p>
+   <div class="boss-rules"><div class="rule"><b>${EXAM_N}</b><span>preguntas al azar de ${EXAM.length}</span></div><div class="rule"><b>${EXAM_MIN} min</b><span>entrega automática al terminar el tiempo</span></div><div class="rule"><b>0.0–5.0</b><span>aprueba con 3.0</span></div><div class="rule"><b>${S.examBest!=null?S.examBest.toFixed(1):'—'}</b><span>tu mejor nota</span></div></div>
+   <form class="field" id="ef"><label for="ename">Nombre completo para el certificado</label><input id="ename" class="ans" style="font-family:var(--f-body)" value="${esc(S.name)}" autocomplete="name" required placeholder="Ej.: María Fernanda López"><div class="row" style="margin-top:6px"><button class="btn primary">Comenzar examen</button></div></form></div>`;
+  $('#ef').onsubmit=e=>{e.preventDefault();const n=$('#ename').value.trim();if(!n)return;S.name=n;save();startExam();};
+}
+function startExam(){
+  Object.assign(EX,{running:true,qs:shuffle(EXAM).slice(0,EXAM_N).map(q=>({...q,_ord:q.type!=='input'?shuffle(q.options.map((_,i)=>i)):null})),ans:{},idx:0,start:Date.now(),end:Date.now()+EXAM_MIN*60000});
+  clearInterval(EX.t);EX.t=setInterval(tick,1000);paintExam();
+}
+function tick(){const ms=EX.end-Date.now();const c=$('#clock');if(c){const s=Math.max(0,Math.ceil(ms/1000));c.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;c.classList.toggle('warn',s<=180);}if(ms<=0)submitExam(true);}
+const answered=i=>{const a=EX.ans[i];return a!=null&&!(Array.isArray(a)&&!a.length);};
+function updateCount(){const c=EX.qs.filter((_,i)=>answered(i)).length;$('.exam-bar .mono b').textContent=c;$$('.qdot')[EX.idx].classList.toggle('ans',answered(EX.idx));}
+function paintExam(){
+  const q=EX.qs[EX.idx],a=EX.ans[EX.idx],n=EX.qs.length,cnt=EX.qs.filter((_,i)=>answered(i)).length;
+  const body=q.type==='mc'?`<div class="opts">${q._ord.map(i=>`<button class="opt ${a===i?'sel':''}" data-o="${i}">${optLabel(q,i)}</button>`).join('')}</div>`
+   :q.type==='multi'?`<p class="multi-hint">Varias respuestas correctas · marca todas las que apliquen</p><div class="opts">${q._ord.map(i=>`<button class="opt ${a&&a.includes(i)?'sel':''}" data-m="${i}" aria-pressed="${!!(a&&a.includes(i))}">${optLabel(q,i)}</button>`).join('')}</div>`
+   :`<div class="ans-form"><label class="sr" for="ein">Tu respuesta</label><input id="ein" class="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe la salida exacta" value="${a!=null?esc(a):''}"></div>`;
+  $('#exam-stage').innerHTML=`<div class="grid"><div class="exam-bar"><div class="row"><span class="mono"><b>${cnt}</b> de ${n} respondidas</span><span class="clock" id="clock">--:--</span><button class="btn primary" id="sub">Entregar</button></div>
+   <div class="qgrid">${EX.qs.map((_,i)=>`<button class="qdot ${answered(i)?'ans':''} ${i===EX.idx?'cur':''}" data-i="${i}" aria-label="Pregunta ${i+1}">${i+1}</button>`).join('')}</div></div>
+   <div class="qcard"><p class="q-label">Pregunta ${EX.idx+1} de ${n}</p><p class="q-prompt">${q.prompt}</p>${q.code?codeBlock(q.code):''}${body}
+   <div class="row" style="justify-content:space-between"><button class="btn" id="prv" ${EX.idx===0?'disabled':''}>← Anterior</button><button class="btn" id="nxt" ${EX.idx===n-1?'disabled':''}>Siguiente →</button></div></div></div>`;
+  tick();
+  $$('.qdot').forEach(b=>b.onclick=()=>{EX.idx=+b.dataset.i;paintExam();});
+  $$('.opt[data-o]').forEach(b=>b.onclick=()=>{EX.ans[EX.idx]=+b.dataset.o;paintExam();});
+  $$('.opt[data-m]').forEach(b=>b.onclick=()=>{const i=+b.dataset.m,cur=EX.ans[EX.idx]||[];EX.ans[EX.idx]=cur.includes(i)?cur.filter(x=>x!==i):cur.concat(i);b.classList.toggle('sel');b.setAttribute('aria-pressed',EX.ans[EX.idx].includes(i));updateCount();});
+  const inp=$('#ein');if(inp){inp.oninput=()=>{const v=inp.value;if(v.trim())EX.ans[EX.idx]=v;else delete EX.ans[EX.idx];updateCount();};inp.onkeydown=e=>{if(e.key==='Enter'&&EX.idx<n-1){EX.idx++;paintExam();}};}
+  $('#prv').onclick=()=>{EX.idx--;paintExam();};$('#nxt').onclick=()=>{EX.idx++;paintExam();};
+  $('#sub').onclick=async()=>{const miss=n-EX.qs.filter((_,i)=>answered(i)).length;if(await ask('¿Entregar el examen?',miss?`Tienes ${miss} pregunta${miss>1?'s':''} sin responder. Contarán como incorrectas.`:'Ya respondiste todas las preguntas. No podrás cambiar tus respuestas.','Entregar'))submitExam(false);};
+}
+function submitExam(auto){
+  if(!EX.running)return;EX.running=false;clearInterval(EX.t);
+  const res=EX.qs.map((q,i)=>{const a=EX.ans[i];const ok=answered(i)&&(q.type==='mc'?a===q.answer:q.type==='multi'?sameSet(a,q.answer):norm(a)===norm(q.answer));return {q,a,ok};});
+  const good=res.filter(r=>r.ok).length,nota=Math.round(good/res.length*50)/10;
+  const mins=Math.round((Math.min(Date.now(),EX.end)-EX.start)/60000);
+  S.examBest=S.examBest==null?nota:Math.max(S.examBest,nota);save();
+  addXP(good*10,'Examen final');if(nota>=3)badge('jefe');if(nota>=4.5)badge('leyenda');
+  renderMission();
+  const pass=nota>=3,date=new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
+  const fmt=(q,v)=>{if(v==null||(Array.isArray(v)&&!v.length))return '<em>sin respuesta</em>';if(q.type==='input')return `<code>${esc(v)}</code>`;return [].concat(v).map(i=>`<code>${esc(q.options[i])}</code>`).join(', ');};
+  $('#exam-stage').innerHTML=`<div class="result">${auto?'<div class="feedback info"><strong>Tiempo agotado.</strong><p>El examen se entregó automáticamente.</p></div>':''}
+   <div class="cert"><p class="eyebrow">JavaQuest · Maestro Legendario · Certificado de examen final</p><h3>${esc(S.name)}</h3><div class="nota ${pass?'pass':'fail'}">${nota.toFixed(1)}</div>
+    <p><b>${pass?'Aprobado':'No aprobado'}</b> · ${good} de ${res.length} correctas · ${mins} min · ${date}</p>
+    <p class="lead">Nivel legendario. Temas: variables, constantes, operadores aritméticos, relacionales y lógicos, if / else if / else, for, while y do-while.</p></div>
+   <div class="row"><button class="btn primary" id="again">Presentar de nuevo</button><button class="btn" id="tor">Volver al repaso</button></div>
+   <h3>Revisión pregunta por pregunta</h3>
+   <div class="review">${res.map((r,i)=>`<div class="rev ${r.ok?'':'bad'}"><p class="q-label">${i+1} · ${r.ok?'Correcta':'Incorrecta'}</p><p><b>${r.q.prompt}</b></p>${r.q.code?codeBlock(r.q.code):''}<p>Tu respuesta: ${fmt(r.q,r.a)}${r.ok?'':` · Correcta: ${fmt(r.q,r.q.answer)}`}</p><p>${r.q.why}</p></div>`).join('')}</div></div>`;
+  $('#again').onclick=renderExam;$('#tor').onclick=()=>show('repaso');
+  if(pass)burst();
+  $('#view-examen').scrollIntoView({behavior:reduced?'auto':'smooth'});
+}
+
+/* ---------- Inicio ---------- */
+$('#reset').onclick=async()=>{if(await ask('Reiniciar progreso','Se borrarán XP, estrellas, insignias y récords del modo legendario guardados en este navegador.','Reiniciar')){S=fresh();save();closeTopic();closeGame();EX.running=false;clearInterval(EX.t);renderHUD();renderExam();toast('Progreso reiniciado');}};
+renderTopicGrid();renderGameGrid();renderHUD();
+const h=location.hash.replace('#','');show(VIEWS.includes(h)?h:'repaso',false);
+
+})();
+</script>
+
+</body></html>
